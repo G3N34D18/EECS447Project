@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "dqnv0FMBQyA=",
+  "dgSpecHash": "vhHGeOs8YmU=",
   "success": true,
-  "projectFilePath": "C:\\Users\\genea\\OneDrive\\Desktop\\ArenaSync\\ArenaSync.Web\\ArenaSync.Web.csproj",
+  "projectFilePath": "C:\\Users\\genea\\OneDrive\\Desktop\\ArenaSync\\EECS447Project\\ArenaSync.Web\\ArenaSync.Web.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\genea\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.5\\microsoft.aspnetcore.app.internal.assets.10.0.5.nupkg.sha512"
   ],

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\genea\\OneDrive\\Desktop\\ArenaSync\\ArenaSync.Web\\ArenaSync.Web.csproj": {}
+    "C:\\Users\\genea\\OneDrive\\Desktop\\ArenaSync\\EECS447Project\\ArenaSync.Web\\ArenaSync.Web.csproj": {}
   },
   "projects": {
-    "C:\\Users\\genea\\OneDrive\\Desktop\\ArenaSync\\ArenaSync.Web\\ArenaSync.Web.csproj": {
+    "C:\\Users\\genea\\OneDrive\\Desktop\\ArenaSync\\EECS447Project\\ArenaSync.Web\\ArenaSync.Web.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\genea\\OneDrive\\Desktop\\ArenaSync\\ArenaSync.Web\\ArenaSync.Web.csproj",
+        "projectUniqueName": "C:\\Users\\genea\\OneDrive\\Desktop\\ArenaSync\\EECS447Project\\ArenaSync.Web\\ArenaSync.Web.csproj",
         "projectName": "ArenaSync.Web",
-        "projectPath": "C:\\Users\\genea\\OneDrive\\Desktop\\ArenaSync\\ArenaSync.Web\\ArenaSync.Web.csproj",
+        "projectPath": "C:\\Users\\genea\\OneDrive\\Desktop\\ArenaSync\\EECS447Project\\ArenaSync.Web\\ArenaSync.Web.csproj",
         "packagesPath": "C:\\Users\\genea\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\genea\\OneDrive\\Desktop\\ArenaSync\\ArenaSync.Web\\obj\\",
+        "outputPath": "C:\\Users\\genea\\OneDrive\\Desktop\\ArenaSync\\EECS447Project\\ArenaSync.Web\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\genea\\AppData\\Roaming\\NuGet\\NuGet.Config"

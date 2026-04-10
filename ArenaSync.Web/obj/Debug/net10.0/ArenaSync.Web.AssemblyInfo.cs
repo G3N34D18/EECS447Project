@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ArenaSync.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e6f54ecec45e81e4e2cfd29557a8a9af8e748e4c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8a42f49ebd93c2beff952621c5482db7bb1d35ec")]
 [assembly: System.Reflection.AssemblyProductAttribute("ArenaSync.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ArenaSync.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

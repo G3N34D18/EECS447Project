@@ -8,7 +8,7 @@ namespace ArenaSync.Web.Models
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
         public int PlayerCount { get; set; }
-        public List<ParticipatesIn> Participations { get; set; } = new();
+        public List<ParticipatesIn> ParticipatesIn { get; set; } = new();
         public List<TeamAssignments> Assignments { get; set; } = new();
     }
 }

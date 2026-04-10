@@ -9,7 +9,7 @@ namespace ArenaSync.Web.Models
         public string Type { get; set; } = string.Empty;
         public string Location { get; set;} = string.Empty;
         public string Phone { get; set; } = string.Empty;
-        public List<SuppliesAt> Supplies { get; set; } = new();
+        public List<SuppliesAt> SuppliesAt { get; set; } = new();
         public List<VendorAssignment> Assignments { get; set; } = new();
 
     }

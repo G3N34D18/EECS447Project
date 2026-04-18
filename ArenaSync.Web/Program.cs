@@ -1,6 +1,7 @@
 using ArenaSync.Web.Components;
 using ArenaSync.Web.Data;
 using Microsoft.EntityFrameworkCore;
+using ArenaSync.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,9 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IVenueService, VenueService>();
 
 var app = builder.Build();
 

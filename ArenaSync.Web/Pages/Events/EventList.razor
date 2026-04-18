@@ -1,0 +1,102 @@
+﻿@page "/events"
+@using ArenaSync.Web.Models
+@inject ArenaSync.Web.Services.IEventService EventService
+
+<div class="arena-page">
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Events</h1>
+            <p class="arena-page-subtitle">Schedule and manage upcoming event sessions.</p>
+        </div>
+        <a class="arena-primary-btn" href="/events/create">＋ Add Event</a>
+    </div>
+
+    <div class="arena-stat-grid">
+        <div class="arena-stat-card">
+            <div class="arena-stat-label">Total Events</div>
+            <div class="arena-stat-value">@events.Count</div>
+        </div>
+        <div class="arena-stat-card">
+            <div class="arena-stat-label">Upcoming Events</div>
+            <div class="arena-stat-value">@events.Count(e => e.StartTime > DateTime.Now)</div>
+        </div>
+        <div class="arena-stat-card">
+            <div class="arena-stat-label">Venues Used</div>
+            <div class="arena-stat-value">@events.Select(e => e.VenueId).Distinct().Count()</div>
+        </div>
+    </div>
+
+    <div class="arena-card arena-table-card">
+        @if (isLoading)
+        {
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading events...</div>
+                <div class="arena-empty-text">Preparing your arena operations.</div>
+            </div>
+        }
+        else if (!events.Any())
+        {
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">No events yet</div>
+                <div class="arena-empty-text">Create your first event to start managing your schedule.</div>
+                <a class="arena-primary-btn" href="/events/create">＋ Add Event</a>
+            </div>
+        }
+        else
+        {
+            <table class="arena-table">
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Location</th>
+                        <th>Date &amp; Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var ev in events)
+                    {
+                        <tr>
+                            <td>
+                                <div class="arena-entity-title">@ev.Name</div>
+                                @if (!string.IsNullOrWhiteSpace(ev.Description))
+                                {
+                                    <div class="arena-muted">@Truncate(ev.Description!, 48)</div>
+                                }
+                            </td>
+                            <td>
+                                <div>@ev.Venue?.Name</div>
+                            </td>
+                            <td>
+                                <div>@ev.StartTime.ToString("MMM d, yyyy")</div>
+                                <div class="arena-muted">@ev.StartTime.ToString("h:mm tt") - @ev.EndTime.ToString("h:mm tt")</div>
+                            </td>
+                            <td>
+                                <div class="arena-actions">
+                                    <a class="arena-outline-btn" href="/events/edit/@ev.Id">Edit</a>
+                                    <a class="arena-link-danger" href="/events/delete/@ev.Id">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Event> events = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        events = await EventService.GetAllEventsAsync();
+        isLoading = false;
+    }
+
+    private static string Truncate(string value, int maxLength)
+        => value.Length <= maxLength ? value : value[..maxLength] + "...";
+}

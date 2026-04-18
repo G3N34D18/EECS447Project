@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ArenaSync.Web.Models;
+using ArenaSync.Web.Data.Configurations;
 
 namespace ArenaSync.Web.Data
 {
@@ -27,12 +28,18 @@ namespace ArenaSync.Web.Data
         public DbSet<SuppliesAt> SuppliesAt { get; set; }
 
         // event specific assignments
-        public DbSet<TeamAssignments> TeamAssignments { get; set; }
+        public DbSet<TeamAssignment> TeamAssignments { get; set; }
         public DbSet<VendorAssignment> VendorAssignments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // NEW: Configure entities using separate configuration classes
+            // This is a good practice to keep the OnModelCreating method clean and maintainable
+            // Will apply to all entities as we progress
+            modelBuilder.ApplyConfiguration(new EventConfiguration());
+            modelBuilder.ApplyConfiguration(new VenueConfiguration());
 
             // composite keys for many-to-many relationships
             modelBuilder.Entity<ParticipatesIn>()
@@ -45,7 +52,7 @@ namespace ArenaSync.Web.Data
                 .HasKey(sa => new { sa.VendorId, sa.EventId });
             
             // assignment of composite key
-            modelBuilder.Entity<TeamAssignments>()
+            modelBuilder.Entity<TeamAssignment>()
                 .HasKey(ta => new { ta.TeamId, ta.EventId, ta.LockerId });
             
             modelBuilder.Entity<VendorAssignment>()
@@ -62,11 +69,11 @@ namespace ArenaSync.Web.Data
             // team assignments: each team can only have one locker room 
             // per event, and each locker room can only be assigned to one 
             // team per event
-            modelBuilder.Entity<TeamAssignments>()
+            modelBuilder.Entity<TeamAssignment>()
                 .HasIndex(ta => new { ta.EventId, ta.TeamId})
                 .IsUnique();
 
-            modelBuilder.Entity<TeamAssignments>()
+            modelBuilder.Entity<TeamAssignment>()
                 .HasIndex(ta => new { ta.EventId, ta.LockerId })
                 .IsUnique();
 

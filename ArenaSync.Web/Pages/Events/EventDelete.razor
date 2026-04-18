@@ -1,0 +1,86 @@
+@page "/events/delete/{Id:int}"
+@rendermode RenderMode.InteractiveServer
+@using ArenaSync.Web.Models
+@inject ArenaSync.Web.Services.IEventService EventService
+@inject NavigationManager Navigation
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Events &gt; Delete Event</div>
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Delete Event</h1>
+            <p class="arena-page-subtitle">Review the event before removing it from the system.</p>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading event...</div>
+            </div>
+        </div>
+    }
+    else if (ev is null)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-title">Event not found</div>
+            <p class="arena-empty-text">The requested event could not be loaded.</p>
+            <a class="arena-primary-btn" href="/events">Back to Events</a>
+        </div>
+    }
+    else
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-form-section-title">Are you sure you want to delete this event?</div>
+            <p class="arena-muted">This action cannot be undone.</p>
+
+            <div class="arena-summary-box">
+                <div class="arena-entity-title">@ev.Name</div>
+                <div class="arena-muted">@ev.Venue?.Name</div>
+                <div class="arena-muted">@ev.StartTime.ToString("MMM d, yyyy, h:mm tt") - @ev.EndTime.ToString("h:mm tt")</div>
+                @if (!string.IsNullOrWhiteSpace(ev.Description))
+                {
+                    <div class="arena-muted">@ev.Description</div>
+                }
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="arena-warning">@errorMessage</div>
+            }
+
+            <div class="arena-form-actions">
+                <a class="arena-secondary-btn" href="/events">Cancel</a>
+                <button class="arena-danger-btn" @onclick="DeleteEventAsync">Delete Event</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Event? ev;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ev = await EventService.GetEventByIdAsync(Id);
+        isLoading = false;
+    }
+
+    private async Task DeleteEventAsync()
+    {
+        var deleted = await EventService.DeleteEventAsync(Id);
+        if (!deleted)
+        {
+            errorMessage = "Event could not be found.";
+            return;
+        }
+
+        Navigation.NavigateTo("/events");
+    }
+}

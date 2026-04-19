@@ -1,0 +1,54 @@
+@page "/teams/edit/{id:int}"
+@using ArenaSync.Web.Dtos
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@inject TeamService TeamService
+@inject NavigationManager Navigation
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    private TeamFormModel? teamForm;
+    private Team? existingTeam;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        existingTeam = await TeamService.GetTeamByIdAsync(id);
+
+        if (existingTeam != null)
+        {
+            teamForm = new TeamFormModel
+            {
+                Name = existingTeam.Name,
+                Manager = existingTeam.Manager,
+                Email = existingTeam.Email,
+                Phone = existingTeam.Phone,
+                PlayerCount = existingTeam.PlayerCount
+            };
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (existingTeam == null || teamForm == null)
+            return;
+
+        // Map DTO → Entity
+        existingTeam.Name = teamForm.Name;
+        existingTeam.Manager = teamForm.Manager;
+        existingTeam.Email = teamForm.Email;
+        existingTeam.Phone = teamForm.Phone;
+        existingTeam.PlayerCount = teamForm.PlayerCount;
+
+        var success = await TeamService.UpdateTeamAsync(existingTeam);
+
+        if (!success)
+        {
+            errorMessage = "A team with this name already exists.";
+            return;
+        }
+
+        Navigation.NavigateTo("/teams");
+    }
+}

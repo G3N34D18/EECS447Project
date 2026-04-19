@@ -2,12 +2,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ArenaSync.Web.Dtos
 {
-    public class TeamAssignmentFormModel
+    public class RegistrationFormModel
     {
         [Required]
-        public int TeamId { get; set; }
+        public int AttendeeId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Please select an event.")]
         public int EventId { get; set; }
     }
 }

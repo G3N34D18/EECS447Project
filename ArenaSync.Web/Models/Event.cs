@@ -12,5 +12,8 @@ namespace ArenaSync.Web.Models
 
         public List<TeamAssignments> Assignments { get; set; } = new();
         public List<VendorAssignment> VendorAssignments { get; set; } = new(); 
+        public List<RegistersFor> Registrations { get; set; } = new();  
+        public List<ParticipatesIn> Participants { get; set; } = new();
+        public List<SuppliesAt> Suppliers { get; set; } = new();
     }
 }

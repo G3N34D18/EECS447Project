@@ -1,0 +1,42 @@
+@page "/teams/assign/{teamId:int}"
+@using ArenaSync.Web.Dtos
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@using Microsoft.EntityFrameworkCore
+@using ArenaSync.Web.Data
+@inject TeamService TeamService
+@inject ApplicationDbContext Db
+@inject NavigationManager Navigation
+
+@code {
+    [Parameter] public int teamId { get; set; }
+
+    private Team? team;
+    private List<Event>? events;
+    private TeamAssignmentFormModel assignmentForm = new();
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        team = await TeamService.GetTeamByIdAsync(teamId);
+        events = await Db.Events.OrderBy(e => e.Name).ToListAsync();
+
+        assignmentForm.TeamId = teamId;
+    }
+
+    private async Task Assign()
+    {
+        var success = await TeamService.AssignTeamToEventAsync(
+            assignmentForm.TeamId,
+            assignmentForm.EventId
+        );
+
+        if (!success)
+        {
+            errorMessage = "This team is already assigned or the event already has 2 teams.";
+            return;
+        }
+
+        Navigation.NavigateTo("/teams");
+    }
+}

@@ -1,0 +1,42 @@
+@page "/attendees/register/{attendeeId:int}"
+@using ArenaSync.Web.Dtos
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@using Microsoft.EntityFrameworkCore
+@using ArenaSync.Web.Data
+@inject AttendeeService AttendeeService
+@inject ApplicationDbContext Db
+@inject NavigationManager Navigation
+
+@code {
+    [Parameter] public int attendeeId { get; set; }
+
+    private Attendee? attendee;
+    private List<Event>? events;
+    private RegistrationFormModel registrationForm = new();
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        attendee = await AttendeeService.GetAttendeeByIdAsync(attendeeId);
+        events = await Db.Events.OrderBy(e => e.Name).ToListAsync();
+
+        registrationForm.AttendeeId = attendeeId;
+    }
+
+    private async Task Register()
+    {
+        var success = await AttendeeService.RegisterAttendeeForEventAsync(
+            registrationForm.AttendeeId,
+            registrationForm.EventId
+        );
+
+        if (!success)
+        {
+            errorMessage = "This attendee is already registered for this event.";
+            return;
+        }
+
+        Navigation.NavigateTo("/attendees");
+    }
+}

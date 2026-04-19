@@ -1,0 +1,22 @@
+@page "/teams/delete/{id:int}"
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@inject TeamService TeamService
+@inject NavigationManager Navigation
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    private Team? team;
+
+    protected override async Task OnInitializedAsync()
+    {
+        team = await TeamService.GetTeamByIdAsync(id);
+    }
+
+    private async Task DeleteTeam()
+    {
+        await TeamService.DeleteTeamAsync(id);
+        Navigation.NavigateTo("/teams");
+    }
+}

@@ -1,0 +1,58 @@
+@page "/teams"
+@using ArenaSync.Web.Services;
+@inject TeamService TeamService
+@using ArenaSync.Web.Models
+
+<h2>Teams</h2>
+
+<a href="/teams/create">Create New Team</a>
+
+@if (teams == null)
+{
+    <p>Loading teams...</p>
+}
+else if (!teams.Any())
+{
+    <p>No teams found.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Manager</th>
+                <th>Email</th>
+                <th>Player Count</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var team in teams)
+            {
+                <tr>
+                    <td>@team.Id</td>
+                    <td>@team.Name</td>
+                    <td>@team.Manager</td>
+                    <td>@team.Email</td>
+                    <td>@team.PlayerCount</td>
+                    <td>
+                        <a class="btn btn-sm btn-secondary me-2" href="/teams/edit/@team.Id">Edit</a>
+                        <a class="btn btn-sm btn-danger me-2" href="/teams/delete/@team.Id">Delete</a>
+                        <a class="btn btn-sm btn-info" href="/teams/assign/@team.Id">Assign</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Team> teams;
+
+    protected override async Task OnInitializedAsync()
+    {
+        teams = await TeamService.GetAllTeamsAsync();
+    }
+}

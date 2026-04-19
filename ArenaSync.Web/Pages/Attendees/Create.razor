@@ -1,0 +1,31 @@
+@page "/attendees/create"
+@using ArenaSync.Web.Dtos
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@inject AttendeeService AttendeeService
+@inject NavigationManager Navigation
+
+@code {
+    private AttendeeFormModel attendeeForm = new();
+    private string? errorMessage;
+
+    private async Task HandleSubmit()
+    {
+        var attendee = new Attendee
+        {
+            Name = attendeeForm.Name,
+            Email = attendeeForm.Email,
+            Phone = attendeeForm.Phone
+        };
+
+        var success = await AttendeeService.CreateAttendeeAsync(attendee);
+
+        if (!success)
+        {
+            errorMessage = "An attendee with this email already exists.";
+            return;
+        }
+
+        Navigation.NavigateTo("/attendees");
+    }
+}

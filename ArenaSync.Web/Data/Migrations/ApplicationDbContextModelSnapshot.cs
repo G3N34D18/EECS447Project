@@ -32,15 +32,18 @@ namespace ArenaSync.Web.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
 
@@ -155,19 +158,23 @@ namespace ArenaSync.Web.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<string>("Manager")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("PlayerCount")
                         .HasColumnType("int");
@@ -191,12 +198,9 @@ namespace ArenaSync.Web.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("int");
 
-                    b.Property<int?>("LockerRoomId")
-                        .HasColumnType("int");
-
                     b.HasKey("TeamId", "EventId", "LockerId");
 
-                    b.HasIndex("LockerRoomId");
+                    b.HasIndex("LockerId");
 
                     b.HasIndex("EventId", "LockerId")
                         .IsUnique();
@@ -393,8 +397,10 @@ namespace ArenaSync.Web.Migrations
                         .IsRequired();
 
                     b.HasOne("ArenaSync.Web.Models.LockerRoom", "LockerRoom")
-                        .WithMany("Assignments")
-                        .HasForeignKey("LockerRoomId");
+                        .WithMany("TeamAssignments")
+                        .HasForeignKey("LockerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("ArenaSync.Web.Models.Team", "Team")
                         .WithMany("Assignments")
@@ -424,7 +430,7 @@ namespace ArenaSync.Web.Migrations
                         .IsRequired();
 
                     b.HasOne("ArenaSync.Web.Models.Vendor", "Vendor")
-                        .WithMany("Assignments")
+                        .WithMany("VendorAssignments")
                         .HasForeignKey("VendorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -456,7 +462,7 @@ namespace ArenaSync.Web.Migrations
 
             modelBuilder.Entity("ArenaSync.Web.Models.LockerRoom", b =>
                 {
-                    b.Navigation("Assignments");
+                    b.Navigation("TeamAssignments");
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.Team", b =>
@@ -468,9 +474,9 @@ namespace ArenaSync.Web.Migrations
 
             modelBuilder.Entity("ArenaSync.Web.Models.Vendor", b =>
                 {
-                    b.Navigation("Assignments");
-
                     b.Navigation("SuppliesAt");
+
+                    b.Navigation("VendorAssignments");
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.VendorBooth", b =>

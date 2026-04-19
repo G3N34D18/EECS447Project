@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ArenaSync.Web.Models;
+using ArenaSync.Web.Data.Configurations;
 
 namespace ArenaSync.Web.Data
 {
@@ -27,7 +28,7 @@ namespace ArenaSync.Web.Data
         public DbSet<SuppliesAt> SuppliesAt { get; set; }
 
         // event specific assignments
-        public DbSet<TeamAssignments> TeamAssignments { get; set; }
+        public DbSet<TeamAssignment> TeamAssignments { get; set; }
         public DbSet<VendorAssignment> VendorAssignments { get; set; }
 
     }

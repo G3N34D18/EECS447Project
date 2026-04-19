@@ -1,6 +1,6 @@
 namespace ArenaSync.Web.Models
 {
-    public class TeamAssignments
+    public class TeamAssignment
     {
         public int Id { get; set; }
         public int EventId { get; set; }

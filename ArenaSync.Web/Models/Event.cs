@@ -10,7 +10,7 @@ namespace ArenaSync.Web.Models
         public int VenueId { get; set; }
         public Venue? Venue { get; set; }
 
-        public List<TeamAssignments> Assignments { get; set; } = new();
+        public List<TeamAssignment> Assignments { get; set; } = new();
         public List<VendorAssignment> VendorAssignments { get; set; } = new(); 
         public List<RegistersFor> Registrations { get; set; } = new();  
         public List<ParticipatesIn> Participants { get; set; } = new();

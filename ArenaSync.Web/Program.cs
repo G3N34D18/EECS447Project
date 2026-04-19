@@ -12,8 +12,11 @@ builder.Services.AddRazorComponents()
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddScoped<TeamService>();
-builder.Services.AddScoped<AttendeeService>();
+builder.Services.AddScoped<ITeamService, TeamService>();
+builder.Services.AddScoped<IAttendeeService, AttendeeService>();
+
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IVenueService, VenueService>();
 
 var app = builder.Build();
 

@@ -22,6 +22,6 @@ namespace ArenaSync.Web.Models
         [Range(1,100)]
         public int PlayerCount { get; set; }
         public List<ParticipatesIn> ParticipatesIn { get; set; } = new();
-        public List<TeamAssignments> Assignments { get; set; } = new();
+        public List<TeamAssignment> Assignments { get; set; } = new();
     }
 }

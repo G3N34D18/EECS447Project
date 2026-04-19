@@ -6,6 +6,6 @@ namespace ArenaSync.Web.Models
         public int RoomNumber { get; set; }
         public int VenueId { get; set; }
         public Venue? Venue { get; set; }
-        public List<TeamAssignments> TeamAssignments { get; set; } = new();
+        public List<TeamAssignment> Assignments { get; set; } = new();
     }
 }

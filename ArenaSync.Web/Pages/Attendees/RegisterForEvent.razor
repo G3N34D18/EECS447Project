@@ -2,29 +2,41 @@
 @using ArenaSync.Web.Dtos
 @using ArenaSync.Web.Models
 @using ArenaSync.Web.Services
-@using Microsoft.EntityFrameworkCore
-@using ArenaSync.Web.Data
-@inject AttendeeService AttendeeService
-@inject ApplicationDbContext Db
+@inject IAttendeeService AttendeeService
+@inject IEventService EventService
 @inject NavigationManager Navigation
+
+
 
 @code {
     [Parameter] public int attendeeId { get; set; }
 
     private Attendee? attendee;
-    private List<Event>? events;
+    private List<Event> events = new();
     private RegistrationFormModel registrationForm = new();
+    private bool isLoading = true;
+    private bool attendeeNotFound;
     private string? errorMessage;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         attendee = await AttendeeService.GetAttendeeByIdAsync(attendeeId);
-        events = await Db.Events.OrderBy(e => e.Name).ToListAsync();
 
-        registrationForm.AttendeeId = attendeeId;
+        if (attendee is null)
+        {
+            attendeeNotFound = true;
+
+        }
+        else
+        {
+            events = await EventService.GetAllEventsAsync();
+            registrationForm.AttendeeId = attendeeId;
+        }
+
+        isLoading = false;
     }
 
-    private async Task Register()
+    private async Task RegisterAsync()
     {
         var success = await AttendeeService.RegisterAttendeeForEventAsync(
             registrationForm.AttendeeId,

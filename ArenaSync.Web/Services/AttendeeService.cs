@@ -4,13 +4,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArenaSync.Web.Services
 {
-    public class AttendeeService
+    public class AttendeeService : IAttendeeService
     {
         private readonly ApplicationDbContext _context;
 
         public AttendeeService(ApplicationDbContext context)
         {
             _context = context;
+        }
+
+        public async Task<List<Event>> GetEventsForAttendeeAsync(int attendeeId)
+        {
+            return await _context.RegistersFor
+                .Where(r => r.AttendeeId == attendeeId)
+                .Include(r => r.Event)
+                .Select(r => r.Event)
+                .OrderBy(e => e.Name)
+                .ToListAsync();
         }
 
         // GET ALL ATTENDEES
@@ -43,19 +53,16 @@ namespace ArenaSync.Web.Services
             return true;
         }
 
-        // UPDATE ATTENDEE (duplicate email check)
-        public async Task<bool> UpdateAttendeeAsync(Attendee attendee)
+        // UPDATE ATTENDEE 
+        public async Task<Attendee?> UpdateAttendeeAsync(Attendee attendee)
         {
-            bool exists = await _context.Attendees
-                .AnyAsync(a => a.Id != attendee.Id &&
-                               a.Email.ToLower() == attendee.Email.ToLower());
-
-            if (exists)
-                return false;
-
-            _context.Attendees.Update(attendee);
+            var existingAttendee = await _context.Attendees.FindAsync(attendee.Id);
+            if (existingAttendee == null) return null;
+            existingAttendee.Name = attendee.Name;
+            existingAttendee.Email = attendee.Email;
+            existingAttendee.Phone = attendee.Phone;
             await _context.SaveChangesAsync();
-            return true;
+            return existingAttendee;
         }
 
         // DELETE ATTENDEE
@@ -70,25 +77,19 @@ namespace ArenaSync.Web.Services
             return true;
         }
 
-        // REGISTER ATTENDEE FOR EVENT (duplicate check)
+        // REGISTER ATTENDEE FOR EVENT 
         public async Task<bool> RegisterAttendeeForEventAsync(int attendeeId, int eventId)
         {
             // Check if already registered
-            bool exists = await _context.RegistersFor
+            var existingAttendee = await _context.Attendees.FindAsync(attendeeId);
+            if (existingAttendee == null) return false;
+            var existingEvent = await _context.Events.FindAsync(eventId);
+            if (existingEvent == null) return false;
+
+            bool alreadyRegistered = await _context.RegistersFor
                 .AnyAsync(r => r.AttendeeId == attendeeId && r.EventId == eventId);
 
-            if (exists)
-                return false;
-
-            // ensure attendee exists
-            bool attendeeExists = await _context.Attendees.AnyAsync(a => a.Id == attendeeId);
-            if (!attendeeExists)
-                return false;
-
-            // ensure event exists
-            bool eventExists = await _context.Events.AnyAsync(e => e.Id == eventId);
-            if (!eventExists)
-                return false;
+            if (alreadyRegistered) return false;
 
             var registration = new RegistersFor
             {

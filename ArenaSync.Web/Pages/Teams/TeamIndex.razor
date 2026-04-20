@@ -1,58 +1,100 @@
 @page "/teams"
-@using ArenaSync.Web.Services;
-@inject TeamService TeamService
 @using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@inject ITeamService TeamService
 
-<h2>Teams</h2>
+<div class="arena-page">
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Teams</h1>
+            <p class="arena-page-subtitle">Manage team rosters, coaches, and event assignments.</p>
+        </div>
+        <a class="arena-primary-btn" href="/teams/create">＋ Add Team</a>
+    </div>
 
-<a href="/teams/create">Create New Team</a>
+    <div class="arena-stat-grid">
+        <div class="arena-stat-card">
+            <div class="arena-stat-label">Total Teams</div>
+            <div class="arena-stat-value">@teams.Count</div>
+        </div>
+        <div class="arena-stat-card">
+            <div class="arena-stat-label">Total Players</div>
+            <div class="arena-stat-value">@teams.Sum(t => t.PlayerCount)</div>
+        </div>
+        <div class="arena-stat-card">
+            <div class="arena-stat-label">Managers</div>
+            <div class="arena-stat-value">@teams.Select(t => t.Manager).Distinct().Count()</div>
+        </div>
+    </div>
 
-@if (teams == null)
-{
-    <p>Loading teams...</p>
-}
-else if (!teams.Any())
-{
-    <p>No teams found.</p>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Name</th>
-                <th>Manager</th>
-                <th>Email</th>
-                <th>Player Count</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var team in teams)
-            {
-                <tr>
-                    <td>@team.Id</td>
-                    <td>@team.Name</td>
-                    <td>@team.Manager</td>
-                    <td>@team.Email</td>
-                    <td>@team.PlayerCount</td>
-                    <td>
-                        <a class="btn btn-sm btn-secondary me-2" href="/teams/edit/@team.Id">Edit</a>
-                        <a class="btn btn-sm btn-danger me-2" href="/teams/delete/@team.Id">Delete</a>
-                        <a class="btn btn-sm btn-info" href="/teams/assign/@team.Id">Assign</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+    <div class="arena-card arena-table-card">
+        @if (isLoading)
+        {
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading teams...</div>
+                <div class="arena-empty-text">Preparing your team directory.</div>
+            </div>
+        }
+        else if (!teams.Any())
+        {
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">No teams yet</div>
+                <div class="arena-empty-text">Add your first team to begin managing rosters.</div>
+                <a class="arena-primary-btn" href="/teams/create">＋ Add Team</a>
+            </div>
+        }
+        else
+        {
+            <table class="arena-table">
+                <thead>
+                    <tr>
+                        <th>Team</th>
+                        <th>Manager</th>
+                        <th>Contact</th>
+                        <th>Players</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var team in teams)
+                    {
+                        <tr>
+                            <td>
+                                <div class="arena-entity-title">@team.Name</div>
+                            </td>
+                            <td>
+                                <div>@team.Manager</div>
+                            </td>
+                            <td>
+                                <div>@team.Email</div>
+                                <div class="arena-muted">@team.Phone</div>
+                            </td>
+                            <td>
+                                <div>@team.PlayerCount</div>
+                            </td>
+                            <td>
+                                <div class="arena-actions">
+                                    <a class="arena-outline-btn" href="/teams/edit/@team.Id">Edit</a>
+                                    <a class="arena-link-danger" href="/teams/delete/@team.Id">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
 
 @code {
-    private List<Team> teams;
+    private List<Team> teams = new();
+    private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
         teams = await TeamService.GetAllTeamsAsync();
+        isLoading = false;
     }
 }

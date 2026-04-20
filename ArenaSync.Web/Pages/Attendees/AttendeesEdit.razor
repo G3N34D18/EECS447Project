@@ -1,18 +1,17 @@
-@page "/teams/edit/{Id:int}"
+@page "/attendees/edit/{Id:int}"
 @using ArenaSync.Web.Dtos
 @using ArenaSync.Web.Models
-@using ArenaSync.Web.Pages.Events
 @using ArenaSync.Web.Services
-@inject ArenaSync.Web.Services.ITeamService TeamService
+@inject ArenaSync.Web.Services.IAttendeeService AttendeeService
 @inject NavigationManager Navigation
 
 <div class="arena-page">
-    <div class="arena-breadcrumb">Teams &gt; Edit Team</div>
+    <div class="arena-breadcrumb">Attendees &gt; Edit Attendee</div>
 
     <div class="arena-page-header">
         <div>
-            <h1 class="arena-page-title">Edit Team</h1>
-            <p class="arena-page-subtitle">Update Team details below.</p>
+            <h1 class="arena-page-title">Edit Attendee</h1>
+            <p class="arena-page-subtitle">Update attendee details below.</p>
         </div>
     </div>
 
@@ -21,36 +20,30 @@
         <div class="arena-card arena-form-card">
             <div class="arena-empty-state">
                 <div class="arena-empty-logo"></div>
-                <div class="arena-empty-title">Loading team...</div>
+                <div class="arena-empty-title">Loading attendee...</div>
             </div>
         </div>
     }
-    else if (teamNotFound)
+    else if (attendeeNotFound)
     {
         <div class="arena-card arena-delete-card">
-            <div class="arena-empty-title">Team not found</div>
-            <p class="arena-empty-text">The requested team could not be loaded.</p>
-            <a class="arena-primary-btn" href="/teams">Back to Teams</a>
+            <div class="arena-empty-title">Attendee not found</div>
+            <p class="arena-empty-text">The requested attendee could not be loaded.</p>
+            <a class="arena-primary-btn" href="/attendees">Back to Attendees</a>
         </div>
     }
     else
     {
         <div class="arena-card arena-form-card">
-            <EditForm Model="form" OnValidSubmit="HandleSubmitAsync" FormName="team-edit-form">
+            <EditForm Model="form" OnValidSubmit="HandleSubmitAsync" FormName="attendee-edit-form">
                 <DataAnnotationsValidator />
 
-                <div class="arena-form-section-title">Team Information</div>
+                <div class="arena-form-section-title">Attendee Information</div>
 
                 <div class="mb-3">
                     <label class="arena-label">Name</label>
                     <InputText @bind-Value="form.Name" class="arena-input" />
                     <ValidationMessage For="@(() => form.Name)" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="arena-label">Manager</label>
-                    <InputText @bind-Value="form.Manager" class="arena-input" />
-                    <ValidationMessage For="@(() => form.Manager)" />
                 </div>
 
                 <div class="mb-3">
@@ -65,19 +58,13 @@
                     <ValidationMessage For="@(() => form.Phone)" />
                 </div>
 
-                <div class="mb-3">
-                    <label class="arena-label">Player Count</label>
-                    <InputNumber @bind-Value="form.PlayerCount" class="arena-input" />
-                    <ValidationMessage For="() => form.PlayerCount" />
-                </div>
-
                 @if (!string.IsNullOrWhiteSpace(errorMessage))
                 {
                     <div class="arena-warning">@errorMessage</div>
                 }
 
                 <div class="arena-form-actions">
-                    <a class="arena-secondary-btn" href="/teams">Cancel</a>
+                    <a class="arena-secondary-btn" href="/attendees">Cancel</a>
                     <button type="submit" class="arena-primary-btn">Save Changes</button>
                 </div>
             </EditForm>
@@ -89,26 +76,24 @@
     [Parameter] public int Id { get; set; }
 
     [SupplyParameterFromForm]
-    private TeamFormModel form { get; set; } = new TeamFormModel();
+    private AttendeeFormModel form { get; set; } = new AttendeeFormModel();
 
     private bool isLoading = true;
-    private bool teamNotFound;
+    private bool attendeeNotFound;
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        var team = await TeamService.GetTeamByIdAsync(Id);
-        if (team is null)
+        var attendee = await AttendeeService.GetAttendeeByIdAsync(Id);
+        if (attendee is null)
         {
-            teamNotFound = true;
+            attendeeNotFound = true;
         }
-        else if (string.IsNullOrWhiteSpace(form.Name) && string.IsNullOrWhiteSpace(form.Manager) && string.IsNullOrWhiteSpace(form.Email) && string.IsNullOrWhiteSpace(form.Phone) && form.PlayerCount == 0)
+        else if (string.IsNullOrWhiteSpace(form.Name) && string.IsNullOrWhiteSpace(form.Email) && string.IsNullOrWhiteSpace(form.Phone))
         {
-            form.Name = team.Name;
-            form.Manager = team.Manager;
-            form.Email = team.Email;
-            form.Phone = team.Phone;
-            form.PlayerCount = team.PlayerCount;
+            form.Name = attendee.Name;
+            form.Email = attendee.Email;
+            form.Phone = attendee.Phone;
         }
 
         isLoading = false;
@@ -118,24 +103,22 @@
     {
         try
         {
-            var team = new Team
+            var attendee = new Attendee
             {
                 Id = Id,
                 Name = form.Name,
-                Manager = form.Manager,
                 Email = form.Email,
-                Phone = form.Phone,
-                PlayerCount = form.PlayerCount
+                Phone = form.Phone
             };
 
-            var result = await TeamService.UpdateTeamAsync(team);
+            var result = await AttendeeService.UpdateAttendeeAsync(attendee);
             if (result is null)
             {
-                teamNotFound = true;
+                attendeeNotFound = true;
                 return;
             }
 
-            Navigation.NavigateTo("/teams");
+            Navigation.NavigateTo("/attendees");
         }
         catch (Exception ex)
         {

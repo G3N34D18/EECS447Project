@@ -4,6 +4,7 @@
    Notes: Replace the existing NavMenu.razor with this file if desired.
    --------------------------------------------------------------------------- *@
 
+@namespace ArenaSync.Web.Components.Layout
 <div class="arena-sidebar">
     <div class="arena-brand">
         <div class="arena-brand-mark">◎</div>
@@ -29,13 +30,16 @@
             <span>Venues</span>
         </NavLink>
 
-        <NavLink href="teams" class="nav-link">
-            <span class="oi oi-people" aria-hidden="true"></span> Teams
+        <NavLink class="arena-nav-link" href="/teams">
+            <span class="arena-nav-icon">⚭</span>
+            <span>Teams</span>
         </NavLink>
 
-        <NavLink href="attendees" class="nav-link">
-            <span class="oi oi-person" aria-hidden="true"></span> Attendees
+        <NavLink class="arena-nav-link" href="/attendees">
+            <span class="arena-nav-icon">○</span>
+            <span>Attendees</span>
         </NavLink>
+
 
 
     </nav>

@@ -1,3 +1,12 @@
+// -----------------------------------------------------------------------------
+// File: TeamFormModel.cs
+// Project: ArenaSync.Web
+// Purpose: Form DTO used by Batch 2 for creating and editing Team records.
+// Notes: Keeps Razor Pages clean by isolating validation rules from EF entities.
+//        Batch 2 introduces team management, event participation, and assignment
+//        workflows; this DTO supports the core CRUD operations for Teams.
+// -----------------------------------------------------------------------------
+
 using System.ComponentModel.DataAnnotations;
 
 namespace ArenaSync.Web.Dtos

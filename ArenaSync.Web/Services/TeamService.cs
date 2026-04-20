@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArenaSync.Web.Services
 {
-    public class TeamService
+    public class TeamService : ITeamService
     {
         private readonly ApplicationDbContext _context;
 
@@ -44,20 +44,18 @@ namespace ArenaSync.Web.Services
             return true;
         }
 
-        // UPDATE TEAM (with duplicate name check)
-        public async Task<bool> UpdateTeamAsync(Team team)
+        // UPDATE TEAM 
+        public async Task<Team> UpdateTeamAsync(Team team)
         {
-            // Duplicate name check (excluding itself)
-            bool exists = await _context.Teams
-                .AnyAsync(t => t.Id != team.Id &&
-                               t.Name.ToLower() == team.Name.ToLower());
-
-            if (exists)
-                return false;
-
-            _context.Teams.Update(team);
+            var existingTeam = await _context.Teams.FindAsync(team.Id);
+            if (existingTeam == null) return null;
+            existingTeam.Name = team.Name;
+            existingTeam.Manager = team.Manager;
+            existingTeam.Email = team.Email;
+            existingTeam.Phone = team.Phone;
+            existingTeam.PlayerCount = team.PlayerCount;
             await _context.SaveChangesAsync();
-            return true;
+            return existingTeam;
         }
 
         // DELETE TEAM

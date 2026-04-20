@@ -22,7 +22,7 @@ public class LockerRoomConfiguration : IEntityTypeConfiguration<LockerRoom>
             .OnDelete(DeleteBehavior.Restrict);
 
         // Relationship: LockerRoom has many TeamAssignments
-        builder.HasMany(lr => lr.TeamAssignments)
+        builder.HasMany(lr => lr.Assignments)
             .WithOne(ta => ta.LockerRoom)
             .HasForeignKey(ta => ta.LockerId)
             .OnDelete(DeleteBehavior.Restrict);

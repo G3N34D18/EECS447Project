@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ArenaSync.Web.Models;
 
-public class TeamAssignmentsConfiguration : IEntityTypeConfiguration<TeamAssignments>
+public class TeamAssignmentsConfiguration : IEntityTypeConfiguration<TeamAssignment>
 {
-    public void Configure(EntityTypeBuilder<TeamAssignments> builder)
+    public void Configure(EntityTypeBuilder<TeamAssignment> builder)
     {
         builder.ToTable("TeamAssignments");
 
@@ -33,7 +33,7 @@ public class TeamAssignmentsConfiguration : IEntityTypeConfiguration<TeamAssignm
 
         // Relationship: LockerRoom → TeamAssignments
         builder.HasOne(ta => ta.LockerRoom)
-            .WithMany(lr => lr.TeamAssignments)
+            .WithMany(lr => lr.Assignments)
             .HasForeignKey(ta => ta.LockerId)
             .OnDelete(DeleteBehavior.Restrict);
     }

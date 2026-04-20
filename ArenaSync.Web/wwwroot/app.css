@@ -161,8 +161,9 @@ body {
 
 .arena-actions {
     display: flex;
+    align-items: center;
     gap: .6rem;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .arena-link-danger {
@@ -348,3 +349,52 @@ body {
         align-items: stretch;
     }
 }
+
+.arena-time-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.arena-time-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: .75rem;
+}
+
+@media (max-width: 991px) {
+    .arena-time-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .arena-time-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.arena-action-btn,
+.arena-action-link {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .55rem .9rem;
+    border-radius: .7rem;
+    font-weight: 600;
+    font-size: .92rem;
+    line-height: 1;
+    text-decoration: none;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.arena-action-edit {
+    background: #fff;
+    border: 1px solid var(--arena-border);
+    color: var(--arena-text);
+}
+
+.arena-action-delete {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--arena-danger);
+}
+

@@ -12,10 +12,48 @@
 .arena-brand {
     display: flex;
     align-items: center;
-    gap: .85rem;
-    padding: .35rem .25rem 1.25rem;
+    gap: .75rem;
+    padding: .3rem .25rem 1rem;
     margin-bottom: 1rem;
     border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.arena-brand-logo {
+    width: 75px;
+    height: 75px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.arena-brand-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    line-height: 1.05;
+    transform: translateY(-2px);
+}
+
+.arena-brand-title {
+    color: #f5d48a;
+    font-size: 1.18rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    white-space: nowrap;
+}
+
+.arena-brand-subtitle {
+    color: rgba(255,255,255,.78);
+    font-size: .82rem;
+    font-weight: 500;
+    margin-top: .15rem;
+    white-space: nowrap;
+}
+
+.arena-brand-wordmark {
+    max-width: 125px;
+    height: auto;
+    object-fit: contain;
 }
 
 .arena-brand-mark {
@@ -29,17 +67,6 @@
     font-size: 1.2rem;
     font-weight: 700;
     box-shadow: 0 0 0 3px rgba(198, 152, 72, .2);
-}
-
-.arena-brand-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #f3dfb4;
-}
-
-.arena-brand-subtitle {
-    font-size: .8rem;
-    color: rgba(255,255,255,.65);
 }
 
 .arena-nav {

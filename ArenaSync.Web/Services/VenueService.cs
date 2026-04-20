@@ -15,7 +15,7 @@ namespace ArenaSync.Web.Services
 
         public async Task<List<Venue>> GetAllVenuesAsync()
         {
-            return await _context.Venues.OrderBy(v => v.Name).ToListAsync();
+            return await _context.Venues.Include(v => v.Events).OrderBy(v => v.Name).ToListAsync();
         }
 
         public async Task<Venue?> GetVenueByIdAsync(int id)

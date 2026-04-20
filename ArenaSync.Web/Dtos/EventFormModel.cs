@@ -11,20 +11,38 @@ namespace ArenaSync.Web.Dtos
 {
     public class EventFormModel
     {
-        [Required(ErrorMessage = "Event name is required.")]
-        [StringLength(200, ErrorMessage = "Event name cannot exceed 200 characters.")]
+        [Required]
+        [StringLength(200)]
         public string Name { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Event start date is required.")]
-        public DateTime StartTime { get; set; }
-
-        [Required(ErrorMessage = "Event end date is required.")]
-        public DateTime EndTime { get; set; }
-
-        [StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters.")]
+        [StringLength(1000)]
         public string? Description { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Please select a venue.")]
+        [Required]
         public int VenueId { get; set; }
+
+        [Required]
+        public DateOnly StartDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+
+        [Range(1, 12)]
+        public int StartHour { get; set; } = 7;
+
+        [Range(0, 59)]
+        public int StartMinute { get; set; } = 0;
+
+        [Required]
+        public string StartMeridiem { get; set; } = "PM";
+
+        [Required]
+        public DateOnly EndDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+
+        [Range(1, 12)]
+        public int EndHour { get; set; } = 9;
+
+        [Range(0, 59)]
+        public int EndMinute { get; set; } = 0;
+
+        [Required]
+        public string EndMeridiem { get; set; } = "PM";
     }
 }

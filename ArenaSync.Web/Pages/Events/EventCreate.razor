@@ -1,6 +1,7 @@
 @page "/events/create"
 @using ArenaSync.Web.Dtos
 @using ArenaSync.Web.Models
+@using ArenaSync.Web.Helpers
 @inject ArenaSync.Web.Services.IEventService EventService
 @inject ArenaSync.Web.Services.IVenueService VenueService
 @inject NavigationManager Navigation
@@ -33,14 +34,64 @@
             </div>
 
             <div class="arena-form-section-title">Schedule</div>
-            <div class="arena-form-grid">
+
+            <div class="arena-form-grid arena-time-grid">
+                <div>
+                    <label class="arena-label">Start Date</label>
+                    <InputDate @bind-Value="form.StartDate" class="arena-input" />
+                </div>
+
                 <div>
                     <label class="arena-label">Start Time</label>
-                    <input class="arena-input" type="datetime-local" @bind="form.StartTime" />
+                    <div class="arena-time-row">
+                        <InputSelect @bind-Value="form.StartHour" class="arena-select">
+                            @for (var h = 1; h <= 12; h++)
+                            {
+                                <option value="@h">@h</option>
+                            }
+                        </InputSelect>
+
+                        <InputSelect @bind-Value="form.StartMinute" class="arena-select">
+                            @for (var m = 0; m < 60; m++)
+                            {
+                                <option value="@m">@m.ToString("00")</option>
+                            }
+                        </InputSelect>
+
+                        <InputSelect @bind-Value="form.StartMeridiem" class="arena-select">
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </InputSelect>
+                    </div>
                 </div>
+
+                <div>
+                    <label class="arena-label">End Date</label>
+                    <InputDate @bind-Value="form.EndDate" class="arena-input" />
+                </div>
+
                 <div>
                     <label class="arena-label">End Time</label>
-                    <input class="arena-input" type="datetime-local" @bind="form.EndTime" />
+                    <div class="arena-time-row">
+                        <InputSelect @bind-Value="form.EndHour" class="arena-select">
+                            @for (var h = 1; h <= 12; h++)
+                            {
+                                <option value="@h">@h</option>
+                            }
+                        </InputSelect>
+
+                        <InputSelect @bind-Value="form.EndMinute" class="arena-select">
+                            @for (var m = 0; m < 60; m++)
+                            {
+                                <option value="@m">@m.ToString("00")</option>
+                            }
+                        </InputSelect>
+
+                        <InputSelect @bind-Value="form.EndMeridiem" class="arena-select">
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </InputSelect>
+                    </div>
                 </div>
             </div>
 
@@ -75,6 +126,8 @@
     private EventFormModel form { get; set; } = new();
 
     private List<Venue> venues = new();
+    string maxLimit = DateTime.Now.AddYears(2).ToString("yyyy-MM-ddTHH:mm");
+    string minLimit = DateTime.Now.AddYears(-10).ToString("yyyy-MM-ddTHH:mm");
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
@@ -86,12 +139,25 @@
     {
         try
         {
+
+            var startTime = EventFormHelpers.CombineDateTime(
+                form.StartDate,
+                form.StartHour,
+                form.StartMinute,
+                form.StartMeridiem);
+
+            var endTime = EventFormHelpers.CombineDateTime(
+                form.EndDate,
+                form.EndHour,
+                form.EndMinute,
+                form.EndMeridiem);
+
             var ev = new Event
             {
                 Name = form.Name,
                 Description = form.Description ?? string.Empty,
-                StartTime = form.StartTime,
-                EndTime = form.EndTime,
+                StartTime = startTime,
+                EndTime = endTime,
                 VenueId = form.VenueId
             };
 

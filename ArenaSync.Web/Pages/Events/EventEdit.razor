@@ -1,9 +1,11 @@
 @page "/events/edit/{Id:int}"
 @using ArenaSync.Web.Dtos
 @using ArenaSync.Web.Models
+@using ArenaSync.Web.Helpers
 @inject ArenaSync.Web.Services.IEventService EventService
 @inject ArenaSync.Web.Services.IVenueService VenueService
 @inject NavigationManager Navigation
+@inject ILogger<EventEdit> Logger
 
 <div class="arena-page">
     <div class="arena-breadcrumb">Events &gt; Edit Event</div>
@@ -34,7 +36,7 @@
     else
     {
         <div class="arena-card arena-form-card">
-            <EditForm Model="form" OnValidSubmit="HandleSubmitAsync" FormName="event-edit-form">
+            <EditForm Model="form" OnValidSubmit="HandleSubmitAsync" FormName="event-edit-form" @key="isLoading">
                 <DataAnnotationsValidator />
 
                 <div class="arena-form-section-title">Basic Information</div>
@@ -51,14 +53,64 @@
                 </div>
 
                 <div class="arena-form-section-title">Schedule</div>
-                <div class="arena-form-grid">
+
+                <div class="arena-form-grid arena-time-grid">
+                    <div>
+                        <label class="arena-label">Start Date</label>
+                        <InputDate @bind-Value="form.StartDate" class="arena-input" />
+                    </div>
+
                     <div>
                         <label class="arena-label">Start Time</label>
-                        <input class="arena-input" type="datetime-local" @bind="form.StartTime" />
+                        <div class="arena-time-row">
+                            <InputSelect @bind-Value="form.StartHour" class="arena-select">
+                                @for (var h = 1; h <= 12; h++)
+                                {
+                                    <option value="@h">@h</option>
+                                }
+                            </InputSelect>
+
+                            <InputSelect @bind-Value="form.StartMinute" class="arena-select">
+                                @for (var m = 0; m < 60; m++)
+                                {
+                                    <option value="@m">@m.ToString("00")</option>
+                                }
+                            </InputSelect>
+
+                            <select @bind="form.StartMeridiem" class="arena-select">
+                                <option value="AM">AM</option>
+                                <option value="PM">PM</option>
+                            </select>
+                        </div>
                     </div>
+
+                    <div>
+                        <label class="arena-label">End Date</label>
+                        <InputDate @bind-Value="form.EndDate" class="arena-input" />
+                    </div>
+
                     <div>
                         <label class="arena-label">End Time</label>
-                        <input class="arena-input" type="datetime-local" @bind="form.EndTime" />
+                        <div class="arena-time-row">
+                            <InputSelect @bind-Value="form.EndHour" class="arena-select">
+                                @for (var h = 1; h <= 12; h++)
+                                {
+                                    <option value="@h">@h</option>
+                                }
+                            </InputSelect>
+
+                            <InputSelect @bind-Value="form.EndMinute" class="arena-select">
+                                @for (var m = 0; m < 60; m++)
+                                {
+                                    <option value="@m">@m.ToString("00")</option>
+                                }
+                            </InputSelect>
+
+                           <select @bind="form.EndMeridiem" class="arena-select">
+                                <option value="AM">AM</option>
+                                <option value="PM">PM</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -102,26 +154,33 @@
 
     protected override async Task OnInitializedAsync()
     {
+        isLoading = true;
+        errorMessage = null;
+        eventNotFound = false;
+
         venues = await VenueService.GetAllVenuesAsync();
 
-        var ev = await EventService.GetEventByIdAsync(Id);
-        if (ev is null)
-        {
-            eventNotFound = true;
-        }
-        else if (string.IsNullOrWhiteSpace(form.Name)
-                 && string.IsNullOrWhiteSpace(form.Description)
-                 && form.VenueId == 0
-                 && form.StartTime == default
-                 && form.EndTime == default)
-        {
-            form.Name = ev.Name;
-            form.Description = ev.Description ?? string.Empty;
-            form.StartTime = ev.StartTime;
-            form.EndTime = ev.EndTime;
-            form.VenueId = ev.VenueId;
-        }
+        // Only hydrate from DB on first page load, not after form post binding
+        var formLooksUninitialized =
+            string.IsNullOrWhiteSpace(form.Name) &&
+            form.VenueId == 0;
 
+        if (formLooksUninitialized)
+        {
+            var ev = await EventService.GetEventByIdAsync(Id);
+
+            if (ev is null)
+            {
+                eventNotFound = true;
+            }
+            else
+            {
+                EventFormHelpers.PopulateFormFromEvent(form, ev);
+                form.StartMeridiem = form.StartMeridiem?.Trim().ToUpper();
+                form.EndMeridiem = form.EndMeridiem?.Trim().ToUpper();
+            }
+        }
+        Logger.LogInformation("EndMeridiem after populate = '[{EndMeridiem}]'", form.EndMeridiem);
         isLoading = false;
     }
 
@@ -129,13 +188,31 @@
     {
         try
         {
+            var startTime = EventFormHelpers.CombineDateTime(
+                form.StartDate,
+                form.StartHour,
+                form.StartMinute,
+                form.StartMeridiem);
+
+            var endTime = EventFormHelpers.CombineDateTime(
+                form.EndDate,
+                form.EndHour,
+                form.EndMinute,
+                form.EndMeridiem);
+
+            if (endTime <= startTime)
+            {
+                errorMessage = "End time must be after start time.";
+                return;
+            }
+
             var ev = new Event
             {
                 Id = Id,
                 Name = form.Name,
                 Description = form.Description ?? string.Empty,
-                StartTime = form.StartTime,
-                EndTime = form.EndTime,
+                StartTime = startTime,
+                EndTime = endTime,
                 VenueId = form.VenueId
             };
 

@@ -13,5 +13,7 @@ namespace ArenaSync.Web.Services
         // Event assignment
         Task<bool> AssignTeamToEventAsync(int teamId, int eventId);
         Task<List<Team>> GetTeamsForEventAsync(int eventId);
+        Task<bool> SubmitReassignmentRequestAsync(int teamId, int requestedEventId, string reason);
+        Task<List<TeamReassignmentRequest>> GetPendingRequestsForTeamAsync(int teamId);
     }
 }

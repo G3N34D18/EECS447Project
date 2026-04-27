@@ -1,42 +1,146 @@
-@page "/teams/assign/{teamId:int}"
+@page "/teams/assign/{TeamId:int}"
 @using ArenaSync.Web.Dtos
 @using ArenaSync.Web.Models
 @using ArenaSync.Web.Services
-@using Microsoft.EntityFrameworkCore
-@using ArenaSync.Web.Data
-@inject TeamService TeamService
-@inject ApplicationDbContext Db
+@rendermode RenderMode.InteractiveServer
+@inject ITeamService TeamService
+@inject IParticipationService ParticipationService
 @inject NavigationManager Navigation
 
+<div class="arena-page">
+    <div class="arena-breadcrumb">Teams &gt; Assign to Event</div>
+
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Assign to Event</h1>
+            <p class="arena-page-subtitle">Register this team as a participant in an event.</p>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading team...</div>
+            </div>
+        </div>
+    }
+    else if (teamNotFound)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-title">Team not found</div>
+            <p class="arena-empty-text">The requested team could not be loaded.</p>
+            <a class="arena-primary-btn" href="/teams">Back to Teams</a>
+        </div>
+    }
+    else
+    {
+        <!-- Current participations summary -->
+        <div class="arena-card arena-form-card">
+            <div class="arena-form-section-title">Current Event Participations</div>
+
+            @if (!team!.ParticipatesIn.Any())
+            {
+                <p class="arena-muted">This team is not currently participating in any events.</p>
+            }
+            else
+            {
+                <div class="arena-summary-box">
+                    @foreach (var p in team.ParticipatesIn)
+                    {
+                        <div class="arena-entity-title">@p.Event?.Name</div>
+                        <div class="arena-muted">@p.Event?.StartTime.ToShortDateString()</div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Assignment form -->
+        <div class="arena-card arena-form-card">
+            <EditForm Model="form" OnValidSubmit="AssignAsync" FormName="team-assign-form">
+                <DataAnnotationsValidator />
+
+                <div class="arena-form-section-title">Event Selection</div>
+
+                @if (!availableEvents.Any())
+                {
+                    <div class="arena-empty-state">
+                        <div class="arena-empty-title">No Available Events</div>
+                        <p class="arena-empty-text">
+                            All events are either full or this team is already assigned to them.
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    <div class="mb-3">
+                        <label class="arena-label">Select Event</label>
+                        <InputSelect @bind-Value="form.EventId" class="arena-select">
+                            <option value="">Choose an event</option>
+                            @foreach (var ev in availableEvents)
+                            {
+                                <option value="@ev.Id">@ev.Name — @ev.StartTime.ToShortDateString()</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => form.EventId)" />
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(errorMessage))
+                    {
+                        <div class="arena-warning">@errorMessage</div>
+                    }
+
+                    <div class="arena-form-actions">
+                        <a class="arena-secondary-btn" href="/teams/details/@TeamId">Cancel</a>
+                        <button type="submit" class="arena-primary-btn">Assign Team</button>
+                    </div>
+                }
+            </EditForm>
+        </div>
+    }
+</div>
+
 @code {
-    [Parameter] public int teamId { get; set; }
+    [Parameter] public int TeamId { get; set; }
 
     private Team? team;
-    private List<Event>? events;
-    private TeamAssignmentFormModel assignmentForm = new();
+    private List<Event> availableEvents = new();
+    private ParticipationFormModel form = new();
+    private bool isLoading = true;
+    private bool teamNotFound;
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        team = await TeamService.GetTeamByIdAsync(teamId);
-        events = await Db.Events.OrderBy(e => e.Name).ToListAsync();
+        team = await TeamService.GetTeamByIdAsync(TeamId);
 
-        assignmentForm.TeamId = teamId;
+        if (team is null)
+        {
+            teamNotFound = true;
+        }
+        else
+        {
+            availableEvents = await ParticipationService.GetAvailableEventsForTeamAsync(TeamId);
+            form.TeamId = TeamId;
+        }
+
+        isLoading = false;
     }
 
-    private async Task Assign()
+    private async Task AssignAsync()
     {
-        var success = await TeamService.AssignTeamToEventAsync(
-            assignmentForm.TeamId,
-            assignmentForm.EventId
-        );
+        errorMessage = null;
+
+        var success = await ParticipationService.AssignTeamToEventAsync(
+            form.TeamId, form.EventId!.Value);
 
         if (!success)
         {
-            errorMessage = "This team is already assigned or the event already has 2 teams.";
+            errorMessage = "This team is already assigned, or the event already has 2 teams.";
             return;
         }
 
-        Navigation.NavigateTo("/teams");
+        Navigation.NavigateTo($"/teams/details/{TeamId}");
     }
 }

@@ -36,8 +36,10 @@ namespace ArenaSync.Web.Services
         {
             return await _context.Attendees
                 .Include(a => a.Registrations)
+                    .ThenInclude(r => r.Event)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
+
 
         // CREATE ATTENDEE (duplicate email check)
         public async Task<bool> CreateAttendeeAsync(Attendee attendee)
@@ -80,27 +82,33 @@ namespace ArenaSync.Web.Services
         // REGISTER ATTENDEE FOR EVENT 
         public async Task<bool> RegisterAttendeeForEventAsync(int attendeeId, int eventId)
         {
-            // Check if already registered
-            var existingAttendee = await _context.Attendees.FindAsync(attendeeId);
-            if (existingAttendee == null) return false;
-            var existingEvent = await _context.Events.FindAsync(eventId);
-            if (existingEvent == null) return false;
+    
+            if (!await _context.Attendees.AnyAsync(a => a.Id == attendeeId))
+                return false;
+
+            if (!await _context.Events.AnyAsync(e => e.Id == eventId))
+            {
+                return false;
+            }
 
             bool alreadyRegistered = await _context.RegistersFor
+                .AsNoTracking()
                 .AnyAsync(r => r.AttendeeId == attendeeId && r.EventId == eventId);
 
-            if (alreadyRegistered) return false;
+            if (alreadyRegistered)
+                return false;
 
-            var registration = new RegistersFor
+
+            _context.RegistersFor.Add(new RegistersFor
             {
                 AttendeeId = attendeeId,
                 EventId = eventId
-            };
+            });
 
-            _context.RegistersFor.Add(registration);
             await _context.SaveChangesAsync();
             return true;
         }
+
 
         // GET ATTENDEES FOR EVENT
         public async Task<List<Attendee>> GetAttendeesForEventAsync(int eventId)
@@ -112,5 +120,19 @@ namespace ArenaSync.Web.Services
                 .OrderBy(a => a.Name)
                 .ToListAsync();
         }
+
+        public async Task<bool> UnregisterAttendeeFromEventAsync(int attendeeId, int eventId)
+        {
+            var registration = await _context.RegistersFor
+                .FirstOrDefaultAsync(r => r.AttendeeId == attendeeId && r.EventId == eventId);
+
+            if (registration == null)
+                return false;
+
+            _context.RegistersFor.Remove(registration);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
     }
 }

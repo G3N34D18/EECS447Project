@@ -12,15 +12,15 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ArenaSync.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260418042602_Add_Team_Attendee_ParticipatesIn_RegistersFor")]
-    partial class Add_Team_Attendee_ParticipatesIn_RegistersFor
+    [Migration("20260422042853_Add_TeamReassignmentRequest")]
+    partial class Add_TeamReassignmentRequest
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.5")
+                .HasAnnotation("ProductVersion", "10.0.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -50,7 +50,7 @@ namespace ArenaSync.Web.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Attendees");
+                    b.ToTable("Attendees", (string)null);
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.Event", b =>
@@ -63,14 +63,16 @@ namespace ArenaSync.Web.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime2");
@@ -82,7 +84,7 @@ namespace ArenaSync.Web.Migrations
 
                     b.HasIndex("VenueId");
 
-                    b.ToTable("Events");
+                    b.ToTable("Events", (string)null);
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.LockerRoom", b =>
@@ -103,7 +105,7 @@ namespace ArenaSync.Web.Migrations
 
                     b.HasIndex("VenueId");
 
-                    b.ToTable("LockerRooms");
+                    b.ToTable("LockerRooms", (string)null);
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.ParticipatesIn", b =>
@@ -118,7 +120,7 @@ namespace ArenaSync.Web.Migrations
 
                     b.HasIndex("EventId");
 
-                    b.ToTable("ParticipatesIn");
+                    b.ToTable("ParticipatesIn", (string)null);
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.RegistersFor", b =>
@@ -133,7 +135,7 @@ namespace ArenaSync.Web.Migrations
 
                     b.HasIndex("EventId");
 
-                    b.ToTable("RegistersFor");
+                    b.ToTable("RegistersFor", (string)null);
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.SuppliesAt", b =>
@@ -148,7 +150,7 @@ namespace ArenaSync.Web.Migrations
 
                     b.HasIndex("EventId");
 
-                    b.ToTable("SuppliesAt");
+                    b.ToTable("SuppliesAt", (string)null);
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.Team", b =>
@@ -184,10 +186,10 @@ namespace ArenaSync.Web.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Teams");
+                    b.ToTable("Teams", (string)null);
                 });
 
-            modelBuilder.Entity("ArenaSync.Web.Models.TeamAssignments", b =>
+            modelBuilder.Entity("ArenaSync.Web.Models.TeamAssignment", b =>
                 {
                     b.Property<int>("TeamId")
                         .HasColumnType("int");
@@ -211,7 +213,40 @@ namespace ArenaSync.Web.Migrations
                     b.HasIndex("EventId", "TeamId")
                         .IsUnique();
 
-                    b.ToTable("TeamAssignments");
+                    b.ToTable("TeamAssignments", (string)null);
+                });
+
+            modelBuilder.Entity("ArenaSync.Web.Models.TeamReassignmentRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RequestedEventId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestedEventId");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("TeamReassignmentRequests");
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.Vendor", b =>
@@ -224,23 +259,27 @@ namespace ArenaSync.Web.Migrations
 
                     b.Property<string>("Location")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Vendors");
+                    b.ToTable("Vendors", (string)null);
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.VendorAssignment", b =>
@@ -264,7 +303,7 @@ namespace ArenaSync.Web.Migrations
                     b.HasIndex("EventId", "VendorId")
                         .IsUnique();
 
-                    b.ToTable("VendorAssignments");
+                    b.ToTable("VendorAssignments", (string)null);
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.VendorBooth", b =>
@@ -285,7 +324,7 @@ namespace ArenaSync.Web.Migrations
 
                     b.HasIndex("VenueId");
 
-                    b.ToTable("VendorBooths");
+                    b.ToTable("VendorBooths", (string)null);
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.Venue", b =>
@@ -298,18 +337,20 @@ namespace ArenaSync.Web.Migrations
 
                     b.Property<string>("Address")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Venues");
+                    b.ToTable("Venues", (string)null);
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.Event", b =>
@@ -317,7 +358,7 @@ namespace ArenaSync.Web.Migrations
                     b.HasOne("ArenaSync.Web.Models.Venue", "Venue")
                         .WithMany("Events")
                         .HasForeignKey("VenueId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Venue");
@@ -328,7 +369,7 @@ namespace ArenaSync.Web.Migrations
                     b.HasOne("ArenaSync.Web.Models.Venue", "Venue")
                         .WithMany("LockerRooms")
                         .HasForeignKey("VenueId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Venue");
@@ -337,15 +378,15 @@ namespace ArenaSync.Web.Migrations
             modelBuilder.Entity("ArenaSync.Web.Models.ParticipatesIn", b =>
                 {
                     b.HasOne("ArenaSync.Web.Models.Event", "Event")
-                        .WithMany()
+                        .WithMany("Participants")
                         .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ArenaSync.Web.Models.Team", "Team")
                         .WithMany("ParticipatesIn")
                         .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Event");
@@ -356,15 +397,15 @@ namespace ArenaSync.Web.Migrations
             modelBuilder.Entity("ArenaSync.Web.Models.RegistersFor", b =>
                 {
                     b.HasOne("ArenaSync.Web.Models.Attendee", "Attendee")
-                        .WithMany()
+                        .WithMany("Registrations")
                         .HasForeignKey("AttendeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ArenaSync.Web.Models.Event", "Event")
-                        .WithMany()
+                        .WithMany("Registrations")
                         .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Attendee");
@@ -375,15 +416,15 @@ namespace ArenaSync.Web.Migrations
             modelBuilder.Entity("ArenaSync.Web.Models.SuppliesAt", b =>
                 {
                     b.HasOne("ArenaSync.Web.Models.Event", "Event")
-                        .WithMany()
+                        .WithMany("Suppliers")
                         .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ArenaSync.Web.Models.Vendor", "Vendor")
                         .WithMany("SuppliesAt")
                         .HasForeignKey("VendorId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Event");
@@ -391,16 +432,16 @@ namespace ArenaSync.Web.Migrations
                     b.Navigation("Vendor");
                 });
 
-            modelBuilder.Entity("ArenaSync.Web.Models.TeamAssignments", b =>
+            modelBuilder.Entity("ArenaSync.Web.Models.TeamAssignment", b =>
                 {
                     b.HasOne("ArenaSync.Web.Models.Event", "Event")
                         .WithMany("Assignments")
                         .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ArenaSync.Web.Models.LockerRoom", "LockerRoom")
-                        .WithMany("TeamAssignments")
+                        .WithMany("Assignments")
                         .HasForeignKey("LockerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -408,12 +449,31 @@ namespace ArenaSync.Web.Migrations
                     b.HasOne("ArenaSync.Web.Models.Team", "Team")
                         .WithMany("Assignments")
                         .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Event");
 
                     b.Navigation("LockerRoom");
+
+                    b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("ArenaSync.Web.Models.TeamReassignmentRequest", b =>
+                {
+                    b.HasOne("ArenaSync.Web.Models.Event", "RequestedEvent")
+                        .WithMany()
+                        .HasForeignKey("RequestedEventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ArenaSync.Web.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RequestedEvent");
 
                     b.Navigation("Team");
                 });
@@ -450,22 +510,33 @@ namespace ArenaSync.Web.Migrations
                     b.HasOne("ArenaSync.Web.Models.Venue", "Venue")
                         .WithMany("VendorBooths")
                         .HasForeignKey("VenueId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Venue");
+                });
+
+            modelBuilder.Entity("ArenaSync.Web.Models.Attendee", b =>
+                {
+                    b.Navigation("Registrations");
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.Event", b =>
                 {
                     b.Navigation("Assignments");
 
+                    b.Navigation("Participants");
+
+                    b.Navigation("Registrations");
+
+                    b.Navigation("Suppliers");
+
                     b.Navigation("VendorAssignments");
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.LockerRoom", b =>
                 {
-                    b.Navigation("TeamAssignments");
+                    b.Navigation("Assignments");
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.Team", b =>

@@ -107,5 +107,34 @@ namespace ArenaSync.Web.Services
                 .Select(p => p.Team)
                 .ToListAsync();
         }
+
+        public async Task<bool> SubmitReassignmentRequestAsync(int teamId, int requestedEventId, string reason)
+        {
+            // Prevent duplicate pending requests for the same team+event
+            var existing = await _context.TeamReassignmentRequests
+                .AnyAsync(r => r.TeamId == teamId 
+                            && r.RequestedEventId == requestedEventId 
+                            && r.Status == RequestStatus.Pending);
+            if (existing) return false;
+
+            _context.TeamReassignmentRequests.Add(new TeamReassignmentRequest
+            {
+                TeamId = teamId,
+                RequestedEventId = requestedEventId,
+                Reason = reason
+            });
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<List<TeamReassignmentRequest>> GetPendingRequestsForTeamAsync(int teamId)
+        {
+            return await _context.TeamReassignmentRequests
+                .Include(r => r.RequestedEvent)
+                .Where(r => r.TeamId == teamId && r.Status == RequestStatus.Pending)
+                .OrderByDescending(r => r.SubmittedAt)
+                .ToListAsync();
+        }
     }
 }

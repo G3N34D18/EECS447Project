@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ArenaSync.Web.Models;
 
+namespace ArenaSync.Web.Data.Configurations;
+
 public class AttendeeConfiguration : IEntityTypeConfiguration<Attendee>
 {
     public void Configure(EntityTypeBuilder<Attendee> builder)

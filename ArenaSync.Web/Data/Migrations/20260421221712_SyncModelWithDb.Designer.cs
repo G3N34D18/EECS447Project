@@ -4,6 +4,7 @@ using ArenaSync.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ArenaSync.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260421221712_SyncModelWithDb")]
+    partial class SyncModelWithDb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -211,39 +214,6 @@ namespace ArenaSync.Web.Migrations
                         .IsUnique();
 
                     b.ToTable("TeamAssignments", (string)null);
-                });
-
-            modelBuilder.Entity("ArenaSync.Web.Models.TeamReassignmentRequest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RequestedEventId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("SubmittedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("TeamId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RequestedEventId");
-
-                    b.HasIndex("TeamId");
-
-                    b.ToTable("TeamReassignmentRequests");
                 });
 
             modelBuilder.Entity("ArenaSync.Web.Models.Vendor", b =>
@@ -452,25 +422,6 @@ namespace ArenaSync.Web.Migrations
                     b.Navigation("Event");
 
                     b.Navigation("LockerRoom");
-
-                    b.Navigation("Team");
-                });
-
-            modelBuilder.Entity("ArenaSync.Web.Models.TeamReassignmentRequest", b =>
-                {
-                    b.HasOne("ArenaSync.Web.Models.Event", "RequestedEvent")
-                        .WithMany()
-                        .HasForeignKey("RequestedEventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ArenaSync.Web.Models.Team", "Team")
-                        .WithMany()
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("RequestedEvent");
 
                     b.Navigation("Team");
                 });

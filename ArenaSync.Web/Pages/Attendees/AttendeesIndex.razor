@@ -1,6 +1,7 @@
 @page "/attendees"
 @using ArenaSync.Web.Models
 @using ArenaSync.Web.Services
+@rendermode RenderMode.InteractiveServer 
 @inject IAttendeeService AttendeeService
 
 <div class="arena-page">
@@ -68,8 +69,9 @@
                             </td>
                             <td>
                                 <div class="arena-actions">
-                                    <a class="arena-action-btn arena-action-edit" href="/attendees/edit/@a.Id">Edit</a>
-                                    <a class="arena-action-link arena-action-delete" href="/attendees/delete/@a.Id">Delete</a>
+                                    <a class="arena-outline-btn" href="/attendees/edit/@a.Id">Edit</a>
+                                    <a class="arena-outline-btn" href="/attendees/details/@a.Id">Details</a>
+                                    <a class="arena-link-danger" href="/attendees/delete/@a.Id">Delete</a>
                                 </div>
                             </td>
                         </tr>

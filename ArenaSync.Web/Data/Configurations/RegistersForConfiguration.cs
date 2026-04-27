@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ArenaSync.Web.Models;
 
+namespace ArenaSync.Web.Data.Configurations;
+
 public class RegistersForConfiguration : IEntityTypeConfiguration<RegistersFor>
 {
     public void Configure(EntityTypeBuilder<RegistersFor> builder)

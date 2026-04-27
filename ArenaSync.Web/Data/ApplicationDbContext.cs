@@ -30,12 +30,14 @@ namespace ArenaSync.Web.Data
         // event specific assignments
         public DbSet<TeamAssignment> TeamAssignments { get; set; }
         public DbSet<VendorAssignment> VendorAssignments { get; set; }
+        public DbSet<TeamReassignmentRequest> TeamReassignmentRequests { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+
         }
     }
 }

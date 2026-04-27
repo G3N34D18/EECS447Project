@@ -1,0 +1,174 @@
+@page "/teams/details/{TeamId:int}"
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@rendermode RenderMode.InteractiveServer
+@inject ITeamService TeamService
+@inject NavigationManager Navigation
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Teams &gt; Details</div>
+
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">@team?.Name</h1>
+            <p class="arena-page-subtitle">Team information, assignments, and requests</p>
+        </div>
+        <div class="arena-actions">
+            <a class="arena-primary-btn" href="/teams/assign/@TeamId">Assign to Event</a>
+            <a class="arena-outline-btn" href="/teams/request-reassignment/@TeamId">Request Reassignment</a>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading team...</div>
+            </div>
+        </div>
+    }
+    else if (teamNotFound)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-title">Team not found</div>
+            <p class="arena-empty-text">The requested team could not be loaded.</p>
+            <a class="arena-primary-btn" href="/teams">Back to Teams</a>
+        </div>
+    }
+    else
+    {
+        <!-- Team Info -->
+        <div class="arena-card arena-form-card">
+            <div class="arena-form-section-title">Team Information</div>
+
+            <div class="arena-info-row">
+                <span class="arena-info-label">Name</span>
+                <span class="arena-info-value">@team!.Name</span>
+            </div>
+            <div class="arena-info-row">
+                <span class="arena-info-label">Manager</span>
+                <span class="arena-info-value">@team.Manager</span>
+            </div>
+            <div class="arena-info-row">
+                <span class="arena-info-label">Email</span>
+                <span class="arena-info-value">@team.Email</span>
+            </div>
+            <div class="arena-info-row">
+                <span class="arena-info-label">Phone</span>
+                <span class="arena-info-value">@team.Phone</span>
+            </div>
+            <div class="arena-info-row">
+                <span class="arena-info-label">Players</span>
+                <span class="arena-info-value">@team.PlayerCount</span>
+            </div>
+        </div>
+
+        <!-- Event Assignments -->
+        <div class="arena-card arena-table-card">
+            <div class="arena-form-section-title">Event Assignments</div>
+
+            @if (!team.Assignments.Any())
+            {
+                <div class="arena-empty-state">
+                    <div class="arena-empty-title">No Assignments</div>
+                    <p class="arena-empty-text">This team is not assigned to any events.</p>
+                    <a class="arena-primary-btn" href="/teams/assign/@TeamId">Assign to Event</a>
+                </div>
+            }
+            else
+            {
+                <table class="arena-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Date</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var a in team.Assignments)
+                        {
+                            <tr>
+                                <td>@a.Event?.Name</td>
+                                <td>@a.Event?.StartTime.ToShortDateString()</td>
+                                <td class="text-end">
+                                    <a class="arena-outline-btn"
+                                       href="/teams/request-reassignment/@TeamId">
+                                        Request Reassignment
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+
+        <!-- Pending Reassignment Requests -->
+        <div class="arena-card arena-table-card">
+            <div class="arena-form-section-title">Pending Reassignment Requests</div>
+
+            @if (!pendingRequests.Any())
+            {
+                <div class="arena-empty-state">
+                    <div class="arena-empty-title">No Pending Requests</div>
+                    <p class="arena-empty-text">There are no pending reassignment requests for this team.</p>
+                </div>
+            }
+            else
+            {
+                <table class="arena-table">
+                    <thead>
+                        <tr>
+                            <th>Requested Event</th>
+                            <th>Reason</th>
+                            <th>Submitted</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in pendingRequests)
+                        {
+                            <tr>
+                                <td>@r.RequestedEvent?.Name</td>
+                                <td>@r.Reason</td>
+                                <td>@r.SubmittedAt.ToShortDateString()</td>
+                                <td>
+                                    <span class="arena-badge arena-badge-warning">@r.Status</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int TeamId { get; set; }
+
+    private Team? team;
+    private List<TeamReassignmentRequest> pendingRequests = new();
+    private bool isLoading = true;
+    private bool teamNotFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+
+        team = await TeamService.GetTeamByIdAsync(TeamId);
+
+        if (team is null)
+        {
+            teamNotFound = true;
+        }
+        else
+        {
+            pendingRequests = await TeamService.GetPendingRequestsForTeamAsync(TeamId);
+        }
+
+        isLoading = false;
+    }
+}

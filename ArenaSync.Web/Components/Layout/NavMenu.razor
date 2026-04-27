@@ -1,30 +1,59 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">ArenaSync.Web</a>
+﻿@* ---------------------------------------------------------------------------
+   File: NavMenu.razor
+   Purpose: Batch 1 modernized sidebar navigation for Events and Venues.
+   Notes: Replace the existing NavMenu.razor with this file if desired.
+   --------------------------------------------------------------------------- *@
+
+@namespace ArenaSync.Web.Components.Layout
+<div class="arena-sidebar">
+      
+   <div class="arena-brand">
+        <img src="images/arenasync-mark.png" alt="ArenaSync logo" class="arena-brand-logo" />
+
+        <div class="arena-brand-text">
+            <div class="arena-brand-title">ArenaSync</div>
+            <div class="arena-brand-subtitle">Operations Console</div>
+        </div>
+    </div>
+
+    <nav class="arena-nav">
+        <NavLink class="arena-nav-link" href="/" Match="NavLinkMatch.All">
+            <span class="arena-nav-icon">⌂</span>
+            <span>Dashboard</span>
+        </NavLink>
+
+        <NavLink class="arena-nav-link" href="/events">
+            <span class="arena-nav-icon">▣</span>
+            <span>Events</span>
+        </NavLink>
+
+        <NavLink class="arena-nav-link" href="/venues">
+            <span class="arena-nav-icon">⌖</span>
+            <span>Venues</span>
+        </NavLink>
+
+        <NavLink class="arena-nav-link" href="/teams">
+            <span class="arena-nav-icon">⚭</span>
+            <span>Teams</span>
+        </NavLink>
+
+        <NavLink class="arena-nav-link" href="/attendees">
+            <span class="arena-nav-icon">○</span>
+            <span>Attendees</span>
+        </NavLink>
+
+
+
+    </nav>
+
+    <div class="arena-sidebar-footer">
+        <a class="arena-nav-link arena-nav-link-muted" href="javascript:void(0)">
+            <span class="arena-nav-icon">⚙</span>
+            <span>Settings</span>
+        </a>
+        <a class="arena-nav-link arena-nav-link-muted" href="javascript:void(0)">
+            <span class="arena-nav-icon">?</span>
+            <span>Help</span>
+        </a>
     </div>
 </div>
-
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
-

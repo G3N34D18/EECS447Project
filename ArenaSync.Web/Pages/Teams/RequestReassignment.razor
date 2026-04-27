@@ -1,0 +1,163 @@
+@page "/teams/request-reassignment/{TeamId:int}"
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@rendermode RenderMode.InteractiveServer
+@inject ITeamService TeamService
+@inject IEventService EventService
+@inject NavigationManager Navigation
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Teams &gt; Request Reassignment</div>
+
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Request Event Reassignment</h1>
+            <p class="arena-page-subtitle">Submit a reassignment request for admin review.</p>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading team...</div>
+            </div>
+        </div>
+    }
+    else if (teamNotFound)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-title">Team not found</div>
+            <p class="arena-empty-text">The requested team could not be loaded.</p>
+            <a class="arena-primary-btn" href="/teams">Back to Teams</a>
+        </div>
+    }
+    else if (submitted)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-title">Request Submitted</div>
+                <p class="arena-empty-text">
+                    Your reassignment request for <strong>@team!.Name</strong> has been sent to an admin for review.
+                </p>
+                <a class="arena-primary-btn" href="/teams">Back to Teams</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="arena-card arena-form-card">
+
+            <div class="arena-form-section-title">Current Assignment</div>
+            @if (team!.Assignments.Count == 0)
+            {
+                <p class="arena-muted">This team is not currently assigned to any event.</p>
+            }
+            else
+            {
+                <div class="arena-summary-box">
+                    @foreach (var a in team.Assignments)
+                    {
+                        <div class="arena-entity-title">@a.Event?.Name</div>
+                        <div class="arena-muted">@a.Event?.StartTime.ToShortDateString()</div>
+                    }
+                </div>
+            }
+
+            <div class="arena-form-section-title" style="margin-top:1.5rem;">Reassignment Request</div>
+
+            <div class="mb-3">
+                <label class="arena-label">Requested Event</label>
+                <select class="arena-select" @onchange="OnEventSelected">
+                    <option value="">Choose an event</option>
+                    @foreach (var ev in availableEvents)
+                    {
+                        <option value="@ev.Id">@ev.Name — @ev.StartTime.ToShortDateString()</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="arena-label">Reason for Reassignment</label>
+                <textarea class="arena-input" rows="3"
+                          @bind="reason"
+                          placeholder="Briefly explain why this reassignment is needed..."></textarea>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="arena-warning">@errorMessage</div>
+            }
+
+            <div class="arena-form-actions">
+                <a class="arena-secondary-btn" href="/teams">Cancel</a>
+                <button class="arena-primary-btn" @onclick="SubmitRequestAsync">Submit Request</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int TeamId { get; set; }
+
+    private Team? team;
+    private List<Event> availableEvents = new();
+    private int? selectedEventId;
+    private string reason = string.Empty;
+    private bool isLoading = true;
+    private bool teamNotFound;
+    private bool submitted;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        team = await TeamService.GetTeamByIdAsync(TeamId);
+
+        if (team is null)
+        {
+            teamNotFound = true;
+        }
+        else
+        {
+            var allEvents = await EventService.GetAllEventsAsync();
+            var assignedEventIds = team.Assignments.Select(a => a.EventId).ToHashSet();
+            availableEvents = allEvents.Where(e => !assignedEventIds.Contains(e.Id)).ToList();
+        }
+
+        isLoading = false;
+    }
+
+    private void OnEventSelected(ChangeEventArgs e)
+    {
+        selectedEventId = int.TryParse(e.Value?.ToString(), out var id) ? id : null;
+    }
+
+    private async Task SubmitRequestAsync()
+    {
+        errorMessage = null;
+
+        if (selectedEventId is null)
+        {
+            errorMessage = "Please select an event.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            errorMessage = "Please provide a reason for the reassignment.";
+            return;
+        }
+
+        var success = await TeamService.SubmitReassignmentRequestAsync(
+            TeamId, selectedEventId.Value, reason);
+
+        if (!success)
+        {
+            errorMessage = "A pending request for this team and event already exists.";
+            return;
+        }
+
+        submitted = true;
+    }
+}

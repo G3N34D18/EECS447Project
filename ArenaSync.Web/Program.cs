@@ -1,5 +1,6 @@
 using ArenaSync.Web.Components;
 using ArenaSync.Web.Data;
+using ArenaSync.Web.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,14 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<ITeamService, TeamService>();
+builder.Services.AddScoped<IAttendeeService, AttendeeService>();
+
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IVenueService, VenueService>();
+
+builder.Services.AddScoped<IParticipationService, ParticipationService>();
 
 var app = builder.Build();
 
@@ -30,3 +39,5 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
+

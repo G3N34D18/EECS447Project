@@ -1,0 +1,99 @@
+﻿@page "/venues"
+@using ArenaSync.Web.Models
+@inject ArenaSync.Web.Services.IVenueService VenueService
+
+@* ---------------------------------------------------------------------------
+   File: Pages/Venues/Index.razor
+   Purpose: Batch 1 venues landing page with summary cards and modern table.
+   --------------------------------------------------------------------------- *@
+
+<div class="arena-page">
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Venues</h1>
+            <p class="arena-page-subtitle">Manage event locations, capacities, and availability.</p>
+        </div>
+        <a class="arena-primary-btn" href="/venues/create">＋ Add Venue</a>
+    </div>
+
+    <div class="arena-stat-grid">
+        <div class="arena-stat-card">
+            <div class="arena-stat-label">Total Venues</div>
+            <div class="arena-stat-value">@venues.Count</div>
+        </div>
+        <div class="arena-stat-card">
+            <div class="arena-stat-label">Total Capacity</div>
+            <div class="arena-stat-value">@venues.Sum(v => v.Capacity).ToString("N0")</div>
+        </div>
+        <div class="arena-stat-card">
+            <div class="arena-stat-label">Venues with Events</div>
+            <div class="arena-stat-value">@venues.Count(v => v.Events?.Any() == true)</div>
+        </div>
+    </div>
+
+    <div class="arena-card arena-table-card">
+        @if (isLoading)
+        {
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading venues...</div>
+                <div class="arena-empty-text">Preparing your arena operations.</div>
+            </div>
+        }
+        else if (!venues.Any())
+        {
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">No venues yet</div>
+                <div class="arena-empty-text">Create your first venue to start assigning events.</div>
+                <a class="arena-primary-btn" href="/venues/create">＋ Add Venue</a>
+            </div>
+        }
+        else
+        {
+            <table class="arena-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Address</th>
+                        <th>Capacity</th>
+                        <th>Events</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var venue in venues)
+                    {
+                        <tr>
+                            <td>
+                                <div class="arena-entity-title">@venue.Name</div>
+                            </td>
+                            <td>
+                                <div>@venue.Address</div>
+                            </td>
+                            <td>@venue.Capacity.ToString("N0")</td>
+                            <td>@(venue.Events?.Count ?? 0)</td>
+                            <td>
+                                <div class="arena-actions">
+                                    <a class="arena-action-btn arena-action-edit" href="/venues/edit/@venue.Id">Edit</a>
+                                    <a class="arena-action-link arena-action-delete" href="/venues/delete/@venue.Id">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Venue> venues = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        venues = await VenueService.GetAllVenuesAsync();
+        isLoading = false;
+    }
+}

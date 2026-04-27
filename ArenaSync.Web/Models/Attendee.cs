@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 namespace ArenaSync.Web.Models
 { 
     public class Attendee
@@ -6,5 +7,6 @@ namespace ArenaSync.Web.Models
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
+        public List<RegistersFor> Registrations { get; set; } = new();
     }
 }

@@ -1,0 +1,94 @@
+@page "/teams/create"
+@using ArenaSync.Web.Dtos
+@using ArenaSync.Web.Models
+@inject ArenaSync.Web.Services.ITeamService TeamService
+@inject NavigationManager Navigation
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Teams &gt; Add Team</div>
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Add Team</h1>
+            <p class="arena-page-subtitle">Enter the new team details below.</p>
+        </div>
+        <a class="arena-primary-btn" href="/teams">Back to Teams</a>
+    </div>
+
+    <div class="arena-card arena-form-card">
+        <EditForm Model="form" OnValidSubmit="HandleSubmit" FormName="team-create-form">
+            <DataAnnotationsValidator />
+
+            <div class="arena-form-section-title">Team Information</div>
+            <div class="mb-3">
+                <label class="arena-label">Team Name</label>
+                <InputText @bind-Value="form.Name" class="arena-input" />
+                <ValidationMessage For="() => form.Name" />
+            </div>
+
+            <div class="mb-3">
+                <label class="arena-label">Team Manager</label>
+                <InputText @bind-Value="form.Manager" class="arena-input" />
+                <ValidationMessage For="() => form.Manager" />
+            </div>
+
+            <div class="mb-3">
+                <label class="arena-label">Team Email</label>
+                <InputText @bind-Value="form.Email" class="arena-input" />
+                <ValidationMessage For="() => form.Email" />
+            </div>
+
+            <div class="mb-3">
+                <label class="arena-label">Team Phone</label>
+                <InputText @bind-Value="form.Phone" class="arena-input" />
+                <ValidationMessage For="() => form.Phone" />
+            </div>
+
+            <div class="mb-3">
+                <label class="arena-label">Player Count</label>
+                <InputNumber @bind-Value="form.PlayerCount" class="arena-input" />
+                <ValidationMessage For="() => form.PlayerCount" />
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="arena-warning">@errorMessage</div>
+            }
+            <div class="arena-form-actions">
+                <a class="arena-secondary-btn" href="/teams">Cancel</a>
+                <button type="submit" class="arena-primary-btn">Create Team</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private TeamFormModel form { get; set; } = new();
+    private List<Team> teams = new();
+    private string? errorMessage;
+    protected override async Task OnInitializedAsync()
+    {
+        teams = await TeamService.GetAllTeamsAsync();
+    }
+
+    private async Task HandleSubmit()
+    {
+        try {
+            var team = new Team
+            {
+                Name = form.Name,
+                Manager = form.Manager,
+                Email = form.Email,
+                Phone = form.Phone,
+                PlayerCount = form.PlayerCount
+            };
+            await TeamService.CreateTeamAsync(team);
+            Navigation.NavigateTo("/teams");
+        } 
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred while creating the team. Please try again.";
+            Console.Error.WriteLine($"Error creating team: {ex.Message}");
+        }
+    }
+}

@@ -1,0 +1,126 @@
+@page "/venues/edit/{Id:int}"
+@using ArenaSync.Web.Dtos
+@using ArenaSync.Web.Models
+@inject ArenaSync.Web.Services.IVenueService VenueService
+@inject NavigationManager Navigation
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Venues &gt; Edit Venue</div>
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Edit Venue</h1>
+            <p class="arena-page-subtitle">Update venue details and capacity information.</p>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading venue...</div>
+            </div>
+        </div>
+    }
+    else if (venueNotFound)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-title">Venue not found</div>
+            <p class="arena-empty-text">The requested venue could not be loaded.</p>
+            <a class="arena-primary-btn" href="/venues">Back to Venues</a>
+        </div>
+    }
+    else
+    {
+        <div class="arena-card arena-form-card">
+            <EditForm Model="form" OnValidSubmit="HandleSubmitAsync" FormName="venue-edit-form">
+                <DataAnnotationsValidator />
+
+                <div class="arena-form-section-title">Venue Details</div>
+
+                <div class="mb-3">
+                    <label class="arena-label">Venue Name</label>
+                    <InputText @bind-Value="form.Name" class="arena-input" />
+                    <ValidationMessage For="() => form.Name" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="arena-label">Address</label>
+                    <InputText @bind-Value="form.Address" class="arena-input" />
+                    <ValidationMessage For="() => form.Address" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="arena-label">Capacity</label>
+                    <InputNumber @bind-Value="form.Capacity" class="arena-input" />
+                    <ValidationMessage For="() => form.Capacity" />
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="arena-warning">@errorMessage</div>
+                }
+
+                <div class="arena-form-actions">
+                    <a class="arena-secondary-btn" href="/venues">Cancel</a>
+                    <button type="submit" class="arena-primary-btn">Save Changes</button>
+                </div>
+            </EditForm>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private VenueFormModel form { get; set; } = new();
+
+    private bool isLoading = true;
+    private bool venueNotFound;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var venue = await VenueService.GetVenueByIdAsync(Id);
+        if (venue is null)
+        {
+            venueNotFound = true;
+        }
+        else if (string.IsNullOrWhiteSpace(form.Name) && string.IsNullOrWhiteSpace(form.Address) && form.Capacity == 0)
+        {
+            form.Name = venue.Name;
+            form.Address = venue.Address;
+            form.Capacity = venue.Capacity;
+        }
+
+        isLoading = false;
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        try
+        {
+            var venue = new Venue
+            {
+                Id = Id,
+                Name = form.Name,
+                Address = form.Address,
+                Capacity = form.Capacity
+            };
+
+            var result = await VenueService.UpdateVenueAsync(venue);
+            if (result is null)
+            {
+                venueNotFound = true;
+                return;
+            }
+
+            Navigation.NavigateTo("/venues");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}

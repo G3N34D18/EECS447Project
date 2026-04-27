@@ -1,0 +1,94 @@
+@page "/attendees"
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@rendermode RenderMode.InteractiveServer 
+@inject IAttendeeService AttendeeService
+
+<div class="arena-page">
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Attendees</h1>
+            <p class="arena-page-subtitle">Manage registered attendees and contact information.</p>
+        </div>
+        <a class="arena-primary-btn" href="/attendees/create">＋ Add Attendee</a>
+    </div>
+
+    <div class="arena-stat-grid">
+        <div class="arena-stat-card">
+            <div class="arena-stat-label">Total Attendees</div>
+            <div class="arena-stat-value">@attendees.Count</div>
+        </div>
+        <div class="arena-stat-card">
+            <div class="arena-stat-label">Unique Emails</div>
+            <div class="arena-stat-value">@attendees.Select(a => a.Email).Distinct().Count()</div>
+        </div>
+        <div class="arena-stat-card">
+            <div class="arena-stat-label">Phone Numbers</div>
+            <div class="arena-stat-value">@attendees.Count(a => !string.IsNullOrWhiteSpace(a.Phone))</div>
+        </div>
+    </div>
+
+    <div class="arena-card arena-table-card">
+        @if (isLoading)
+        {
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading attendees...</div>
+                <div class="arena-empty-text">Preparing your attendee directory.</div>
+            </div>
+        }
+        else if (!attendees.Any())
+        {
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">No attendees yet</div>
+                <div class="arena-empty-text">Add your first attendee to begin managing registrations.</div>
+                <a class="arena-primary-btn" href="/attendees/create">＋ Add Attendee</a>
+            </div>
+        }
+        else
+        {
+            <table class="arena-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Contact</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in attendees)
+                    {
+                        <tr>
+                            <td>
+                                <div class="arena-entity-title">@a.Name</div>
+                                <div class="arena-muted">@a.Email</div>
+                            </td>
+                            <td>
+                                <div>@a.Phone</div>
+                            </td>
+                            <td>
+                                <div class="arena-actions">
+                                    <a class="arena-outline-btn" href="/attendees/edit/@a.Id">Edit</a>
+                                    <a class="arena-outline-btn" href="/attendees/details/@a.Id">Details</a>
+                                    <a class="arena-link-danger" href="/attendees/delete/@a.Id">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Attendee> attendees = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        attendees = await AttendeeService.GetAllAttendeesAsync();
+        isLoading = false;
+    }
+}

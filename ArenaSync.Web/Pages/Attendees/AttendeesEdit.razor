@@ -1,0 +1,129 @@
+@page "/attendees/edit/{Id:int}"
+@using ArenaSync.Web.Dtos
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@rendermode RenderMode.InteractiveServer 
+@inject ArenaSync.Web.Services.IAttendeeService AttendeeService
+@inject NavigationManager Navigation
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Attendees &gt; Edit Attendee</div>
+
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Edit Attendee</h1>
+            <p class="arena-page-subtitle">Update attendee details below.</p>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading attendee...</div>
+            </div>
+        </div>
+    }
+    else if (attendeeNotFound)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-title">Attendee not found</div>
+            <p class="arena-empty-text">The requested attendee could not be loaded.</p>
+            <a class="arena-primary-btn" href="/attendees">Back to Attendees</a>
+        </div>
+    }
+    else
+    {
+        <div class="arena-card arena-form-card">
+            <EditForm Model="form" OnValidSubmit="HandleSubmitAsync" FormName="attendee-edit-form">
+                <DataAnnotationsValidator />
+
+                <div class="arena-form-section-title">Attendee Information</div>
+
+                <div class="mb-3">
+                    <label class="arena-label">Name</label>
+                    <InputText @bind-Value="form.Name" class="arena-input" />
+                    <ValidationMessage For="@(() => form.Name)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="arena-label">Email</label>
+                    <InputText @bind-Value="form.Email" class="arena-input" />
+                    <ValidationMessage For="@(() => form.Email)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="arena-label">Phone</label>
+                    <InputText @bind-Value="form.Phone" class="arena-input" />
+                    <ValidationMessage For="@(() => form.Phone)" />
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="arena-warning">@errorMessage</div>
+                }
+
+                <div class="arena-form-actions">
+                    <a class="arena-secondary-btn" href="/attendees">Cancel</a>
+                    <button type="submit" class="arena-primary-btn">Save Changes</button>
+                </div>
+            </EditForm>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private AttendeeFormModel form { get; set; } = new AttendeeFormModel();
+
+    private bool isLoading = true;
+    private bool attendeeNotFound;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var attendee = await AttendeeService.GetAttendeeByIdAsync(Id);
+        if (attendee is null)
+        {
+            attendeeNotFound = true;
+        }
+        else if (string.IsNullOrWhiteSpace(form.Name) && string.IsNullOrWhiteSpace(form.Email) && string.IsNullOrWhiteSpace(form.Phone))
+        {
+            form.Name = attendee.Name;
+            form.Email = attendee.Email;
+            form.Phone = attendee.Phone;
+        }
+
+        isLoading = false;
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        try
+        {
+            var attendee = new Attendee
+            {
+                Id = Id,
+                Name = form.Name,
+                Email = form.Email,
+                Phone = form.Phone
+            };
+
+            var result = await AttendeeService.UpdateAttendeeAsync(attendee);
+            if (result is null)
+            {
+                attendeeNotFound = true;
+                return;
+            }
+
+            Navigation.NavigateTo("/attendees");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}

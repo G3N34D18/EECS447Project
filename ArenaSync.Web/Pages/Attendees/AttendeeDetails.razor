@@ -1,0 +1,126 @@
+@page "/attendees/details/{attendeeId:int}"
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@rendermode RenderMode.InteractiveServer 
+@inject IAttendeeService AttendeeService
+@inject NavigationManager Navigation
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Attendees &gt; Details</div>
+
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">@attendee?.Name</h1>
+            <p class="arena-page-subtitle">Attendee information and event registrations</p>
+        </div>
+        <div>
+            <a class="arena-primary-btn" href="/attendees/register/@attendeeId">Register for Event</a>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading attendee...</div>
+            </div>
+        </div>
+    }
+    else if (attendeeNotFound)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-title">Attendee not found</div>
+            <p class="arena-empty-text">The requested attendee could not be loaded.</p>
+            <a class="arena-primary-btn" href="/attendees">Back to Attendees</a>
+        </div>
+    }
+    else
+    {
+        <!-- Attendee Info -->
+        <div class="arena-card arena-form-card">
+            <div class="arena-form-section-title">Attendee Information</div>
+
+            <div class="arena-info-row">
+                <span class="arena-info-label">Name</span>
+                <span class="arena-info-value">@attendee.Name</span>
+            </div>
+
+            <div class="arena-info-row">
+                <span class="arena-info-label">Email</span>
+                <span class="arena-info-value">@attendee.Email</span>
+            </div>
+
+            <div class="arena-info-row">
+                <span class="arena-info-label">Phone</span>
+                <span class="arena-info-value">@attendee.Phone</span>
+            </div>
+        </div>
+
+        <!-- Registrations -->
+        <div class="arena-card arena-table-card">
+            <div class="arena-form-section-title">Event Registrations</div>
+
+            @if (attendee.Registrations.Count == 0)
+            {
+                <div class="arena-empty-state">
+                    <div class="arena-empty-title">No Registrations</div>
+                    <p class="arena-empty-text">This attendee is not registered for any events.</p>
+                    <a class="arena-primary-btn" href="/attendees/register/@attendeeId">Register for Event</a>
+                </div>
+            }
+            else
+            {
+                <table class="arena-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Date</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var reg in attendee.Registrations)
+                        {
+                            <tr>
+                                <td>@reg.Event.Name</td>
+                                <td>@reg.Event.StartTime.ToShortDateString()</td>
+                                <td class="text-end">
+                                    <button class="arena-danger-btn" @onclick="() => Unregister(reg.EventId)">
+                                        Remove
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int attendeeId { get; set; }
+
+    private Attendee? attendee;
+    private bool isLoading = true;
+    private bool attendeeNotFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        attendee = await AttendeeService.GetAttendeeByIdAsync(attendeeId);
+
+        attendeeNotFound = attendee is null;
+        isLoading = false;
+    }
+
+    private async Task Unregister(int eventId)
+    {
+        await AttendeeService.UnregisterAttendeeFromEventAsync(attendeeId, eventId);
+
+        // Reload attendee with updated registrations
+        attendee = await AttendeeService.GetAttendeeByIdAsync(attendeeId);
+
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,172 @@
+@page "/events/create"
+@using ArenaSync.Web.Dtos
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Helpers
+@inject ArenaSync.Web.Services.IEventService EventService
+@inject ArenaSync.Web.Services.IVenueService VenueService
+@inject NavigationManager Navigation
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Events &gt; Add Event</div>
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Add Event</h1>
+            <p class="arena-page-subtitle">Schedule the new event details below.</p>
+        </div>
+        <a class="arena-primary-btn" href="/events">Back to Events</a>
+    </div>
+
+    <div class="arena-card arena-form-card">
+        <EditForm Model="form" OnValidSubmit="HandleSubmitAsync" FormName="event-create-form">
+            <DataAnnotationsValidator />
+
+            <div class="arena-form-section-title">Basic Information</div>
+            <div class="mb-3">
+                <label class="arena-label">Event Name</label>
+                <InputText @bind-Value="form.Name" class="arena-input" />
+                <ValidationMessage For="@(() => form.Name)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="arena-label">Description</label>
+                <InputTextArea @bind-Value="form.Description" class="arena-textarea" />
+                <ValidationMessage For="@(() => form.Description)" />
+            </div>
+
+            <div class="arena-form-section-title">Schedule</div>
+
+            <div class="arena-form-grid arena-time-grid">
+                <div>
+                    <label class="arena-label">Start Date</label>
+                    <InputDate @bind-Value="form.StartDate" class="arena-input" />
+                </div>
+
+                <div>
+                    <label class="arena-label">Start Time</label>
+                    <div class="arena-time-row">
+                        <InputSelect @bind-Value="form.StartHour" class="arena-select">
+                            @for (var h = 1; h <= 12; h++)
+                            {
+                                <option value="@h">@h</option>
+                            }
+                        </InputSelect>
+
+                        <InputSelect @bind-Value="form.StartMinute" class="arena-select">
+                            @for (var m = 0; m < 60; m++)
+                            {
+                                <option value="@m">@m.ToString("00")</option>
+                            }
+                        </InputSelect>
+
+                        <InputSelect @bind-Value="form.StartMeridiem" class="arena-select">
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </InputSelect>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="arena-label">End Date</label>
+                    <InputDate @bind-Value="form.EndDate" class="arena-input" />
+                </div>
+
+                <div>
+                    <label class="arena-label">End Time</label>
+                    <div class="arena-time-row">
+                        <InputSelect @bind-Value="form.EndHour" class="arena-select">
+                            @for (var h = 1; h <= 12; h++)
+                            {
+                                <option value="@h">@h</option>
+                            }
+                        </InputSelect>
+
+                        <InputSelect @bind-Value="form.EndMinute" class="arena-select">
+                            @for (var m = 0; m < 60; m++)
+                            {
+                                <option value="@m">@m.ToString("00")</option>
+                            }
+                        </InputSelect>
+
+                        <InputSelect @bind-Value="form.EndMeridiem" class="arena-select">
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </InputSelect>
+                    </div>
+                </div>
+            </div>
+
+            <div class="arena-form-section-title">Location</div>
+            <div class="mb-3">
+                <label class="arena-label">Venue</label>
+                <InputSelect @bind-Value="form.VenueId" class="arena-select">
+                    <option value="0">Select a venue</option>
+                    @foreach (var venue in venues)
+                    {
+                        <option value="@venue.Id">@venue.Name</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => form.VenueId)" />
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="arena-warning">@errorMessage</div>
+            }
+
+            <div class="arena-form-actions">
+                <a class="arena-secondary-btn" href="/events">Cancel</a>
+                <button type="submit" class="arena-primary-btn">Save Event</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private EventFormModel form { get; set; } = new();
+
+    private List<Venue> venues = new();
+    string maxLimit = DateTime.Now.AddYears(2).ToString("yyyy-MM-ddTHH:mm");
+    string minLimit = DateTime.Now.AddYears(-10).ToString("yyyy-MM-ddTHH:mm");
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        venues = await VenueService.GetAllVenuesAsync();
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        try
+        {
+
+            var startTime = EventFormHelpers.CombineDateTime(
+                form.StartDate,
+                form.StartHour,
+                form.StartMinute,
+                form.StartMeridiem);
+
+            var endTime = EventFormHelpers.CombineDateTime(
+                form.EndDate,
+                form.EndHour,
+                form.EndMinute,
+                form.EndMeridiem);
+
+            var ev = new Event
+            {
+                Name = form.Name,
+                Description = form.Description ?? string.Empty,
+                StartTime = startTime,
+                EndTime = endTime,
+                VenueId = form.VenueId
+            };
+
+            await EventService.CreateEventAsync(ev);
+            Navigation.NavigateTo("/events");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}

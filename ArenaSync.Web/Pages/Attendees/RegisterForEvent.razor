@@ -1,0 +1,115 @@
+@page "/attendees/register/{attendeeId:int}"
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@rendermode RenderMode.InteractiveServer 
+@inject IAttendeeService AttendeeService
+@inject IEventService EventService
+@inject NavigationManager Navigation
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Attendees &gt; Register for Event</div>
+
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Register Attendee</h1>
+            <p class="arena-page-subtitle">Assign this attendee to an event.</p>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading attendee...</div>
+            </div>
+        </div>
+    }
+    else if (attendeeNotFound)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-title">Attendee not found</div>
+            <p class="arena-empty-text">The requested attendee could not be loaded.</p>
+            <a class="arena-primary-btn" href="/attendees">Back to Attendees</a>
+        </div>
+    }
+    else
+    {
+        <div class="arena-card arena-form-card">
+            <EditForm Model="registrationForm" OnValidSubmit="RegisterAsync" FormName="attendee-register-form">
+                <DataAnnotationsValidator />
+
+                <div class="arena-form-section-title">Event Selection</div>
+
+                <div class="mb-3">
+                    <label class="arena-label">Select Event</label>
+                    <InputSelect @bind-Value="registrationForm.EventId" class="arena-select">
+                        <option value="">Choose an event</option>
+                        @foreach (var ev in events)
+                        {
+                            <option value="@ev.Id.ToString()">@ev.Name</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => registrationForm.EventId)" />
+               </div>
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="arena-warning">@errorMessage</div>
+                }
+
+                <div class="arena-form-actions">
+                    <a class="arena-secondary-btn" href="/attendees/details/@attendeeId">Cancel</a>
+                    <button type="submit" class="arena-primary-btn">Register Attendee</button>
+                </div>
+            </EditForm>
+        </div>
+    }
+</div> 
+
+@code {
+    [Parameter] public int attendeeId { get; set; }
+
+    private Attendee? attendee;
+    private List<Event> events = new();
+    private RegistrationFormModel registrationForm = new();
+    private bool isLoading = true;
+    private bool attendeeNotFound;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        attendee = await AttendeeService.GetAttendeeByIdAsync(attendeeId);
+
+        if (attendee is null)
+        {
+            attendeeNotFound = true;
+        }
+        else
+        {
+            events = await EventService.GetAllEventsAsync();
+            registrationForm.AttendeeId = attendeeId;
+        }
+
+        isLoading = false;
+    }
+
+    private async Task RegisterAsync()
+    {
+        errorMessage = null;
+        
+        var success = await AttendeeService.RegisterAttendeeForEventAsync(
+            registrationForm.AttendeeId,
+            registrationForm.EventId!.Value
+        );
+
+        if (!success)
+        {
+            errorMessage = "This attendee is already registered for this event.";
+            return;
+        }
+
+        Navigation.NavigateTo($"/attendees/details/{attendeeId}");
+    }
+}

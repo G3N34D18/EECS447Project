@@ -1,0 +1,204 @@
+@page "/admin/pending-requests"
+@page "/teams/reassignment-requests"
+@rendermode RenderMode.InteractiveServer
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@inject ITeamService TeamService
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Admin &gt; Pending Requests</div>
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Pending Requests</h1>
+            <p class="arena-page-subtitle">Approve or deny team reassignment, late resignation, and overlap participation requests.</p>
+        </div>
+        <a class="arena-primary-btn" href="/">Back to Dashboard</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(actionMessage))
+    {
+        <div class="arena-warning">@actionMessage</div>
+    }
+
+    @if (selectedRequest is not null)
+    {
+        <div class="arena-card arena-request-detail">
+            <div class="arena-request-detail-header">
+                <div>
+                    <div class="arena-form-section-title">Request Details</div>
+                    <p class="arena-muted">@selectedRequest.Team.Name - @FormatRequestType(selectedRequest.Type)</p>
+                </div>
+                <span class="arena-badge">@selectedRequest.Status</span>
+            </div>
+
+            <div class="arena-request-detail-grid">
+                <div class="arena-request-detail-item">
+                    <span class="arena-info-label">Team</span>
+                    <span class="arena-info-value">@selectedRequest.Team.Name</span>
+                </div>
+
+                <div class="arena-request-detail-item">
+                    <span class="arena-info-label">Manager</span>
+                    <span class="arena-info-value">@selectedRequest.Team.Manager</span>
+                </div>
+
+                <div class="arena-request-detail-item">
+                    <span class="arena-info-label">Type</span>
+                    <span class="arena-info-value">@FormatRequestType(selectedRequest.Type)</span>
+                </div>
+
+                <div class="arena-request-detail-item">
+                    <span class="arena-info-label">Submitted</span>
+                    <span class="arena-info-value">@selectedRequest.SubmittedAt.ToShortDateString()</span>
+                </div>
+
+                <div class="arena-request-detail-item">
+                    <span class="arena-info-label">Source Event</span>
+                    <span class="arena-info-value">@FormatEvent(selectedRequest.SourceEvent)</span>
+                </div>
+
+                <div class="arena-request-detail-item">
+                    <span class="arena-info-label">Target Event</span>
+                    <span class="arena-info-value">@FormatEvent(selectedRequest.TargetEvent)</span>
+                </div>
+
+                <div class="arena-request-detail-item arena-request-detail-wide">
+                    <span class="arena-info-label">Current Registrations</span>
+                    <div class="arena-request-registration-list">
+                        @if (!selectedRequest.Team.ParticipatesIn.Any())
+                        {
+                            <span class="arena-muted">None</span>
+                        }
+                        else
+                        {
+                            @foreach (var participation in selectedRequest.Team.ParticipatesIn.OrderBy(p => p.Event?.StartTime))
+                            {
+                                <div>
+                                    <span>@participation.Event?.Name</span>
+                                    <span class="arena-muted">@participation.Event?.StartTime.ToShortDateString()</span>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <div class="arena-request-detail-item arena-request-detail-wide">
+                    <span class="arena-info-label">Reason</span>
+                    <p class="arena-request-reason">@selectedRequest.Reason</p>
+                </div>
+            </div>
+
+            <div class="arena-form-actions">
+                <button type="button" class="arena-outline-btn" @onclick="() => ApproveAsync(selectedRequest.Id)">Approve</button>
+                <button type="button" class="arena-link-danger" @onclick="() => DenyAsync(selectedRequest.Id)">Deny</button>
+            </div>
+        </div>
+    }
+
+    <div class="arena-card arena-table-card">
+        @if (isLoading)
+        {
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading requests...</div>
+            </div>
+        }
+        else if (!requests.Any())
+        {
+            <div class="arena-empty-state">
+                <div class="arena-empty-title">No Pending Requests</div>
+                <p class="arena-empty-text">There are no team event requests waiting for admin review.</p>
+            </div>
+        }
+        else
+        {
+            <table class="arena-table">
+                <thead>
+                    <tr>
+                        <th>Team</th>
+                        <th>Type</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var request in requests)
+                    {
+                        <tr class="@(selectedRequest?.Id == request.Id ? "arena-selected-row" : null)">
+                            <td>
+                                <div class="arena-entity-title">@request.Team.Name</div>
+                                <div class="arena-muted">@request.Team.Manager</div>
+                            </td>
+                            <td>@FormatRequestType(request.Type)</td>
+                            <td>
+                                <button type="button" class="arena-table-action" @onclick="() => ViewDetails(request)">View Details</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private List<TeamEventRequest> requests = new();
+    private TeamEventRequest? selectedRequest;
+    private bool isLoading = true;
+    private string? actionMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        var selectedRequestId = selectedRequest?.Id;
+        requests = await TeamService.GetPendingTeamEventRequestsAsync();
+        selectedRequest = selectedRequestId is null
+            ? null
+            : requests.FirstOrDefault(r => r.Id == selectedRequestId.Value);
+        isLoading = false;
+    }
+
+    private void ViewDetails(TeamEventRequest request)
+    {
+        actionMessage = null;
+        selectedRequest = request;
+    }
+
+    private async Task ApproveAsync(int requestId)
+    {
+        var result = await TeamService.ApproveTeamEventRequestAsync(requestId);
+        actionMessage = result.Message;
+        selectedRequest = null;
+        await LoadAsync();
+    }
+
+    private async Task DenyAsync(int requestId)
+    {
+        var result = await TeamService.DenyTeamEventRequestAsync(requestId);
+        actionMessage = result.Message;
+        selectedRequest = null;
+        await LoadAsync();
+    }
+
+    private static string FormatRequestType(TeamEventRequestType type)
+    {
+        return type switch
+        {
+            TeamEventRequestType.Reassignment => "Reassignment",
+            TeamEventRequestType.LateResignation => "Late Resignation",
+            TeamEventRequestType.OverlapParticipation => "Overlap Participation",
+            _ => type.ToString()
+        };
+    }
+
+    private static string FormatEvent(Event? eventEntity)
+    {
+        return eventEntity is null
+            ? "-"
+            : $"{eventEntity.Name} ({eventEntity.StartTime.ToShortDateString()})";
+    }
+}

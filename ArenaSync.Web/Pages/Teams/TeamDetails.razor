@@ -114,10 +114,10 @@
                                     }
                                 </td>
                                 <td>
-                                    <div class="arena-actions">
-                                        <a class="arena-outline-btn" href="/teams/request-reassignment/@TeamId">Request Reassignment</a>
+                                    <div class="arena-table-actions">
+                                        <a class="arena-table-action" href="/teams/request-reassignment/@TeamId">Request Reassignment</a>
                                         <button type="button"
-                                                class="arena-link-danger"
+                                                class="arena-table-action arena-table-action-danger"
                                                 disabled="@(!CanResign(eventEntity))"
                                                 title="@GetResignTitle(eventEntity)"
                                                 @onclick="() => ResignAsync(participation.EventId)">
@@ -202,6 +202,9 @@
                         }
                     </tbody>
                 </table>
+                <div class="arena-form-actions">
+                    <a class="arena-outline-btn" href="/admin/pending-requests">Review All Pending Requests</a>
+                </div>
             }
         </div>
     }

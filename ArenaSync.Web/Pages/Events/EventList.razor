@@ -74,12 +74,12 @@
                                 <div class="arena-muted">@ev.StartTime.ToString("h:mm tt") - @ev.EndTime.ToString("h:mm tt")</div>
                             </td>
                             <td>
-                                <div class="arena-actions">
-                                    <a class="arena-outline-btn" href="/events/@ev.Id/team-assignments">Lockers</a>
-                                    <a class="arena-outline-btn" href="/events/@ev.Id/vendors">Vendors</a>
-                                    <a class="arena-outline-btn" href="/events/@ev.Id/vendor-assignments">Booths</a>
-                                    <a class="arena-action-btn arena-action-edit" href="/events/edit/@ev.Id">Edit</a>
-                                    <a class="arena-action-link arena-action-delete" href="/events/delete/@ev.Id">Delete</a>
+                                <div class="arena-table-actions">
+                                    <a class="arena-table-action" href="/events/@ev.Id/team-assignments">Lockers</a>
+                                    <a class="arena-table-action" href="/events/@ev.Id/vendors">Vendors</a>
+                                    <a class="arena-table-action" href="/events/@ev.Id/vendor-assignments">Booths</a>
+                                    <a class="arena-table-action" href="/events/edit/@ev.Id">Edit</a>
+                                    <a class="arena-table-action arena-table-action-danger" href="/events/delete/@ev.Id">Delete</a>
                                 </div>
                             </td>
                         </tr>

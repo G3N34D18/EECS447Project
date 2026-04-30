@@ -91,9 +91,9 @@
                                 </td>
                                 <td>@lockerRoom.Assignments.Count</td>
                                 <td>
-                                    <div class="arena-actions">
-                                        <button type="button" class="arena-outline-btn" @onclick="() => BeginEdit(lockerRoom)">Edit</button>
-                                        <button type="button" class="arena-link-danger" @onclick="() => DeleteAsync(lockerRoom.Id)">Delete</button>
+                                    <div class="arena-table-actions">
+                                        <button type="button" class="arena-table-action" @onclick="() => BeginEdit(lockerRoom)">Edit</button>
+                                        <button type="button" class="arena-table-action arena-table-action-danger" @onclick="() => DeleteAsync(lockerRoom.Id)">Delete</button>
                                     </div>
                                 </td>
                             </tr>

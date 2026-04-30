@@ -74,11 +74,11 @@
                             <td>@venue.Capacity.ToString("N0")</td>
                             <td>@(venue.Events?.Count ?? 0)</td>
                             <td>
-                                <div class="arena-actions">
-                                    <a class="arena-outline-btn" href="/venues/@venue.Id/locker-rooms">Locker Rooms</a>
-                                    <a class="arena-outline-btn" href="/venues/@venue.Id/vendor-booths">Booths</a>
-                                    <a class="arena-action-btn arena-action-edit" href="/venues/edit/@venue.Id">Edit</a>
-                                    <a class="arena-action-link arena-action-delete" href="/venues/delete/@venue.Id">Delete</a>
+                                <div class="arena-table-actions">
+                                    <a class="arena-table-action" href="/venues/@venue.Id/locker-rooms">Locker Rooms</a>
+                                    <a class="arena-table-action" href="/venues/@venue.Id/vendor-booths">Booths</a>
+                                    <a class="arena-table-action" href="/venues/edit/@venue.Id">Edit</a>
+                                    <a class="arena-table-action arena-table-action-danger" href="/venues/delete/@venue.Id">Delete</a>
                                 </div>
                             </td>
                         </tr>

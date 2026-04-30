@@ -1,0 +1,94 @@
+@page "/vendors"
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@inject IVendorService VendorService
+
+<div class="arena-page">
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Vendors</h1>
+            <p class="arena-page-subtitle">Manage food, retail, media, and support vendors.</p>
+        </div>
+        <a class="arena-primary-btn" href="/vendors/create">+ Add Vendor</a>
+    </div>
+
+    <div class="arena-stat-grid">
+        <div class="arena-stat-card">
+            <div class="arena-stat-label">Total Vendors</div>
+            <div class="arena-stat-value">@vendors.Count</div>
+        </div>
+        <div class="arena-stat-card">
+            <div class="arena-stat-label">Assigned To Events</div>
+            <div class="arena-stat-value">@vendors.Count(v => v.SuppliesAt.Any())</div>
+        </div>
+        <div class="arena-stat-card">
+            <div class="arena-stat-label">Booth Assignments</div>
+            <div class="arena-stat-value">@vendors.Sum(v => v.VendorAssignments.Count)</div>
+        </div>
+    </div>
+
+    <div class="arena-card arena-table-card">
+        @if (isLoading)
+        {
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading vendors...</div>
+                <div class="arena-empty-text">Preparing your vendor directory.</div>
+            </div>
+        }
+        else if (!vendors.Any())
+        {
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">No vendors yet</div>
+                <div class="arena-empty-text">Add vendors before assigning booths at events.</div>
+                <a class="arena-primary-btn" href="/vendors/create">+ Add Vendor</a>
+            </div>
+        }
+        else
+        {
+            <table class="arena-table">
+                <thead>
+                    <tr>
+                        <th>Vendor</th>
+                        <th>Type</th>
+                        <th>Location</th>
+                        <th>Phone</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var vendor in vendors)
+                    {
+                        <tr>
+                            <td>
+                                <div class="arena-entity-title">@vendor.Name</div>
+                            </td>
+                            <td>@vendor.Type</td>
+                            <td>@vendor.Location</td>
+                            <td>@vendor.Phone</td>
+                            <td>
+                                <div class="arena-actions">
+                                    <a class="arena-outline-btn" href="/vendors/edit/@vendor.Id">Edit</a>
+                                    <a class="arena-outline-btn" href="/vendors/details/@vendor.Id">Details</a>
+                                    <a class="arena-link-danger" href="/vendors/delete/@vendor.Id">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Vendor> vendors = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        vendors = await VendorService.GetAllVendorsAsync();
+        isLoading = false;
+    }
+}

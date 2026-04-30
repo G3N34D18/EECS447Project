@@ -1,0 +1,97 @@
+@page "/vendors/details/{Id:int}"
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@inject IVendorService VendorService
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Vendors &gt; Details</div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading vendor...</div>
+            </div>
+        </div>
+    }
+    else if (vendor is null)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-title">Vendor not found</div>
+            <p class="arena-empty-text">The requested vendor could not be loaded.</p>
+            <a class="arena-primary-btn" href="/vendors">Back to Vendors</a>
+        </div>
+    }
+    else
+    {
+        <div class="arena-page-header">
+            <div>
+                <h1 class="arena-page-title">@vendor.Name</h1>
+                <p class="arena-page-subtitle">@vendor.Type</p>
+            </div>
+            <div class="arena-actions">
+                <a class="arena-outline-btn" href="/vendors/edit/@vendor.Id">Edit</a>
+                <a class="arena-primary-btn" href="/vendors">Back to Vendors</a>
+            </div>
+        </div>
+
+        <div class="arena-card arena-form-card">
+            <div class="arena-form-section-title">Vendor Information</div>
+            <div class="arena-info-row">
+                <span class="arena-info-label">Location</span>
+                <span class="arena-info-value">@vendor.Location</span>
+            </div>
+            <div class="arena-info-row">
+                <span class="arena-info-label">Phone</span>
+                <span class="arena-info-value">@vendor.Phone</span>
+            </div>
+        </div>
+
+        <div class="arena-card arena-table-card">
+            <div class="arena-form-section-title">Event Booth Assignments</div>
+            @if (!vendor.VendorAssignments.Any())
+            {
+                <div class="arena-empty-state">
+                    <div class="arena-empty-title">No Booth Assignments</div>
+                    <p class="arena-empty-text">This vendor has not been assigned to booths yet.</p>
+                </div>
+            }
+            else
+            {
+                <table class="arena-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Venue</th>
+                            <th>Booth</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var assignment in vendor.VendorAssignments)
+                        {
+                            <tr>
+                                <td>@assignment.Event?.Name</td>
+                                <td>@assignment.Booth?.Venue?.Name</td>
+                                <td>Booth @assignment.Booth?.BoothNumber</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Vendor? vendor;
+    private bool isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        vendor = await VendorService.GetVendorByIdAsync(Id);
+        isLoading = false;
+    }
+}

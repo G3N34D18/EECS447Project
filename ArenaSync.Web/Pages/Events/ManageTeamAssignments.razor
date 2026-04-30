@@ -1,0 +1,194 @@
+@page "/events/{EventId:int}/team-assignments"
+@rendermode RenderMode.InteractiveServer
+@using ArenaSync.Web.Components.Shared
+@using ArenaSync.Web.Dtos
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@inject IEventService EventService
+@inject ITeamService TeamService
+@inject IAssignmentService AssignmentService
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Events &gt; Team Locker Assignments</div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading team assignments...</div>
+            </div>
+        </div>
+    }
+    else if (eventEntity is null)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-title">Event not found</div>
+            <p class="arena-empty-text">The requested event could not be loaded.</p>
+            <a class="arena-primary-btn" href="/events">Back to Events</a>
+        </div>
+    }
+    else
+    {
+        <div class="arena-page-header">
+            <div>
+                <h1 class="arena-page-title">Team Locker Assignments</h1>
+                <p class="arena-page-subtitle">@eventEntity.Name at @eventEntity.Venue?.Name</p>
+            </div>
+            <a class="arena-primary-btn" href="/events">Back to Events</a>
+        </div>
+
+        <ConflictWarningPanel Conflicts="conflicts" Title="Team Assignment Warnings" />
+
+        <div class="arena-card arena-form-card">
+            <EditForm Model="form" OnValidSubmit="AssignAsync" FormName="team-locker-assignment-form">
+                <DataAnnotationsValidator />
+
+                <div class="arena-form-section-title">Assign Team to Locker Room</div>
+
+                @if (!assignableTeams.Any())
+                {
+                    <div class="arena-empty-state">
+                        <div class="arena-empty-title">No Teams Available</div>
+                        <p class="arena-empty-text">Teams must participate in this event before they can receive locker rooms.</p>
+                        <a class="arena-primary-btn" href="/teams">Manage Teams</a>
+                    </div>
+                }
+                else if (!availableLockerRooms.Any())
+                {
+                    <div class="arena-empty-state">
+                        <div class="arena-empty-title">No Locker Rooms Available</div>
+                        <p class="arena-empty-text">Add locker rooms to this event's venue or free an existing assignment.</p>
+                        <a class="arena-primary-btn" href="/venues/@eventEntity.VenueId/locker-rooms">Manage Locker Rooms</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="arena-form-grid">
+                        <div class="mb-3">
+                            <label class="arena-label">Team</label>
+                            <InputSelect @bind-Value="form.TeamId" class="arena-select">
+                                <option value="0">Choose a team</option>
+                                @foreach (var team in assignableTeams)
+                                {
+                                    <option value="@team.Id">@team.Name</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="() => form.TeamId" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="arena-label">Locker Room</label>
+                            <InputSelect @bind-Value="form.LockerId" class="arena-select">
+                                <option value="0">Choose a locker room</option>
+                                @foreach (var lockerRoom in availableLockerRooms)
+                                {
+                                    <option value="@lockerRoom.Id">Room @lockerRoom.RoomNumber</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="() => form.LockerId" />
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(errorMessage))
+                    {
+                        <div class="arena-warning">@errorMessage</div>
+                    }
+
+                    <div class="arena-form-actions">
+                        <button type="submit" class="arena-primary-btn">Assign Locker</button>
+                    </div>
+                }
+            </EditForm>
+        </div>
+
+        <div class="arena-card arena-table-card">
+            <div class="arena-form-section-title">Current Locker Assignments</div>
+            @if (!assignments.Any())
+            {
+                <div class="arena-empty-state">
+                    <div class="arena-empty-title">No locker assignments</div>
+                    <p class="arena-empty-text">Assign teams to locker rooms as they are confirmed for the event.</p>
+                </div>
+            }
+            else
+            {
+                <table class="arena-table">
+                    <thead>
+                        <tr>
+                            <th>Team</th>
+                            <th>Locker Room</th>
+                            <th>Venue</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var assignment in assignments)
+                        {
+                            <tr>
+                                <td>@assignment.Team?.Name</td>
+                                <td>Room @assignment.LockerRoom.RoomNumber</td>
+                                <td>@assignment.LockerRoom.Venue?.Name</td>
+                                <td>
+                                    <button type="button" class="arena-link-danger" @onclick="() => RemoveAsync(assignment)">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int EventId { get; set; }
+
+    private Event? eventEntity;
+    private List<Team> teams = new();
+    private List<Team> assignableTeams = new();
+    private List<LockerRoom> availableLockerRooms = new();
+    private List<TeamAssignment> assignments = new();
+    private List<AssignmentConflictDto> conflicts = new();
+    private TeamAssignmentFormModel form = new();
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        eventEntity = await EventService.GetEventByIdAsync(EventId);
+        assignments = eventEntity is null ? new List<TeamAssignment>() : await AssignmentService.GetTeamAssignmentsForEventAsync(EventId);
+        teams = eventEntity is null ? new List<Team>() : await TeamService.GetTeamsForEventAsync(EventId);
+        assignableTeams = teams.Where(t => assignments.All(a => a.TeamId != t.Id)).ToList();
+        availableLockerRooms = eventEntity is null ? new List<LockerRoom>() : await AssignmentService.GetAvailableLockerRoomsForEventAsync(EventId);
+        conflicts = eventEntity is null ? new List<AssignmentConflictDto>() : await AssignmentService.GetAssignmentConflictsAsync(EventId);
+        form = new TeamAssignmentFormModel { EventId = EventId };
+        isLoading = false;
+    }
+
+    private async Task AssignAsync()
+    {
+        errorMessage = null;
+        var result = await AssignmentService.AssignTeamToLockerAsync(form.TeamId, EventId, form.LockerId);
+        if (!result.Succeeded)
+        {
+            errorMessage = result.Message;
+            return;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task RemoveAsync(TeamAssignment assignment)
+    {
+        errorMessage = null;
+        await AssignmentService.RemoveTeamLockerAssignmentAsync(assignment.TeamId, assignment.EventId, assignment.LockerId);
+        await LoadAsync();
+    }
+}

@@ -1,0 +1,194 @@
+@page "/venues/{VenueId:int}/locker-rooms"
+@rendermode RenderMode.InteractiveServer
+@using ArenaSync.Web.Dtos
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@inject IVenueService VenueService
+@inject IFacilityService FacilityService
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Venues &gt; Locker Rooms</div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading locker rooms...</div>
+            </div>
+        </div>
+    }
+    else if (venue is null)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-title">Venue not found</div>
+            <p class="arena-empty-text">The requested venue could not be loaded.</p>
+            <a class="arena-primary-btn" href="/venues">Back to Venues</a>
+        </div>
+    }
+    else
+    {
+        <div class="arena-page-header">
+            <div>
+                <h1 class="arena-page-title">Locker Rooms</h1>
+                <p class="arena-page-subtitle">@venue.Name</p>
+            </div>
+            <a class="arena-primary-btn" href="/venues">Back to Venues</a>
+        </div>
+
+        <div class="arena-card arena-form-card">
+            <EditForm Model="form" OnValidSubmit="SaveAsync" FormName="locker-room-form">
+                <DataAnnotationsValidator />
+
+                <div class="arena-form-section-title">@(editingLockerRoomId.HasValue ? "Edit Locker Room" : "Add Locker Room")</div>
+                <div class="arena-form-grid">
+                    <div class="mb-3">
+                        <label class="arena-label">Room Number</label>
+                        <InputNumber @bind-Value="form.RoomNumber" class="arena-input" />
+                        <ValidationMessage For="() => form.RoomNumber" />
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="arena-warning">@errorMessage</div>
+                }
+
+                <div class="arena-form-actions">
+                    @if (editingLockerRoomId.HasValue)
+                    {
+                        <button type="button" class="arena-secondary-btn" @onclick="CancelEdit">Cancel Edit</button>
+                    }
+                    <button type="submit" class="arena-primary-btn">@(editingLockerRoomId.HasValue ? "Save Locker Room" : "Add Locker Room")</button>
+                </div>
+            </EditForm>
+        </div>
+
+        <div class="arena-card arena-table-card">
+            @if (!lockerRooms.Any())
+            {
+                <div class="arena-empty-state">
+                    <div class="arena-empty-title">No locker rooms yet</div>
+                    <p class="arena-empty-text">Add locker rooms before assigning teams to physical space.</p>
+                </div>
+            }
+            else
+            {
+                <table class="arena-table">
+                    <thead>
+                        <tr>
+                            <th>Room</th>
+                            <th>Assignments</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var lockerRoom in lockerRooms)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="arena-entity-title">Room @lockerRoom.RoomNumber</div>
+                                </td>
+                                <td>@lockerRoom.Assignments.Count</td>
+                                <td>
+                                    <div class="arena-actions">
+                                        <button type="button" class="arena-outline-btn" @onclick="() => BeginEdit(lockerRoom)">Edit</button>
+                                        <button type="button" class="arena-link-danger" @onclick="() => DeleteAsync(lockerRoom.Id)">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int VenueId { get; set; }
+
+    [SupplyParameterFromForm]
+    private LockerRoomFormModel form { get; set; } = new();
+
+    private Venue? venue;
+    private List<LockerRoom> lockerRooms = new();
+    private int? editingLockerRoomId;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        venue = await VenueService.GetVenueByIdAsync(VenueId);
+        lockerRooms = venue is null
+            ? new List<LockerRoom>()
+            : await FacilityService.GetLockerRoomsForVenueAsync(VenueId);
+
+        form.VenueId = VenueId;
+        isLoading = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        errorMessage = null;
+        form.VenueId = VenueId;
+
+        var saved = editingLockerRoomId.HasValue
+            ? await FacilityService.UpdateLockerRoomAsync(new LockerRoom
+            {
+                Id = editingLockerRoomId.Value,
+                RoomNumber = form.RoomNumber,
+                VenueId = VenueId
+            })
+            : await FacilityService.CreateLockerRoomAsync(new LockerRoom
+            {
+                RoomNumber = form.RoomNumber,
+                VenueId = VenueId
+            });
+
+        if (!saved)
+        {
+            errorMessage = "Locker room could not be saved. Check for duplicate room numbers or active assignments.";
+            return;
+        }
+
+        CancelEdit();
+        await LoadAsync();
+    }
+
+    private void BeginEdit(LockerRoom lockerRoom)
+    {
+        editingLockerRoomId = lockerRoom.Id;
+        form = new LockerRoomFormModel
+        {
+            RoomNumber = lockerRoom.RoomNumber,
+            VenueId = lockerRoom.VenueId
+        };
+    }
+
+    private void CancelEdit()
+    {
+        editingLockerRoomId = null;
+        form = new LockerRoomFormModel { VenueId = VenueId };
+        errorMessage = null;
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        errorMessage = null;
+        var deleted = await FacilityService.DeleteLockerRoomAsync(id);
+        if (!deleted)
+        {
+            errorMessage = "Locker room could not be deleted because it has assignments.";
+            return;
+        }
+
+        await LoadAsync();
+    }
+}

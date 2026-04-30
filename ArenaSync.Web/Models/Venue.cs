@@ -1,5 +1,3 @@
-using ArenaSync.Web.Pages.Venues;
-
 namespace ArenaSync.Web.Models
 {
     public class Venue

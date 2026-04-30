@@ -1,0 +1,131 @@
+@page "/vendors/edit/{Id:int}"
+@using ArenaSync.Web.Dtos
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@inject IVendorService VendorService
+@inject NavigationManager Navigation
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Vendors &gt; Edit Vendor</div>
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Edit Vendor</h1>
+            <p class="arena-page-subtitle">Update vendor contact and operating details.</p>
+        </div>
+        <a class="arena-primary-btn" href="/vendors">Back to Vendors</a>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading vendor...</div>
+            </div>
+        </div>
+    }
+    else if (vendorNotFound)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-title">Vendor not found</div>
+            <p class="arena-empty-text">The requested vendor could not be loaded.</p>
+            <a class="arena-primary-btn" href="/vendors">Back to Vendors</a>
+        </div>
+    }
+    else
+    {
+        <div class="arena-card arena-form-card">
+            <EditForm Model="form" OnValidSubmit="HandleSubmitAsync" FormName="vendor-edit-form">
+                <DataAnnotationsValidator />
+
+                <div class="arena-form-section-title">Vendor Information</div>
+
+                <div class="mb-3">
+                    <label class="arena-label">Name</label>
+                    <InputText @bind-Value="form.Name" class="arena-input" />
+                    <ValidationMessage For="() => form.Name" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="arena-label">Type</label>
+                    <InputText @bind-Value="form.Type" class="arena-input" />
+                    <ValidationMessage For="() => form.Type" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="arena-label">Location</label>
+                    <InputText @bind-Value="form.Location" class="arena-input" />
+                    <ValidationMessage For="() => form.Location" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="arena-label">Phone</label>
+                    <InputText @bind-Value="form.Phone" class="arena-input" />
+                    <ValidationMessage For="() => form.Phone" />
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="arena-warning">@errorMessage</div>
+                }
+
+                <div class="arena-form-actions">
+                    <a class="arena-secondary-btn" href="/vendors">Cancel</a>
+                    <button type="submit" class="arena-primary-btn">Save Changes</button>
+                </div>
+            </EditForm>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private VendorFormModel form { get; set; } = new();
+
+    private bool isLoading = true;
+    private bool vendorNotFound;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var vendor = await VendorService.GetVendorByIdAsync(Id);
+        if (vendor is null)
+        {
+            vendorNotFound = true;
+        }
+        else
+        {
+            form = new VendorFormModel
+            {
+                Name = vendor.Name,
+                Type = vendor.Type,
+                Location = vendor.Location,
+                Phone = vendor.Phone
+            };
+        }
+
+        isLoading = false;
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        var updated = await VendorService.UpdateVendorAsync(new Vendor
+        {
+            Id = Id,
+            Name = form.Name,
+            Type = form.Type,
+            Location = form.Location,
+            Phone = form.Phone
+        });
+
+        if (updated is null)
+        {
+            errorMessage = "Vendor could not be saved. Check for duplicate names and try again.";
+            return;
+        }
+
+        Navigation.NavigateTo("/vendors");
+    }
+}

@@ -1,0 +1,180 @@
+@page "/events/{EventId:int}/vendors"
+@rendermode RenderMode.InteractiveServer
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@inject IEventService EventService
+@inject IVendorService VendorService
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Events &gt; Vendors</div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading event vendors...</div>
+            </div>
+        </div>
+    }
+    else if (eventEntity is null)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-title">Event not found</div>
+            <p class="arena-empty-text">The requested event could not be loaded.</p>
+            <a class="arena-primary-btn" href="/events">Back to Events</a>
+        </div>
+    }
+    else
+    {
+        <div class="arena-page-header">
+            <div>
+                <h1 class="arena-page-title">Event Vendors</h1>
+                <p class="arena-page-subtitle">@eventEntity.Name at @eventEntity.Venue?.Name</p>
+            </div>
+            <div class="arena-actions">
+                <a class="arena-outline-btn" href="/events/@EventId/vendor-assignments">Booth Assignments</a>
+                <a class="arena-primary-btn" href="/events">Back to Events</a>
+            </div>
+        </div>
+
+        <div class="arena-card arena-form-card">
+            <EditForm Model="form" OnValidSubmit="AddVendorAsync" FormName="event-vendor-form">
+                <DataAnnotationsValidator />
+
+                <div class="arena-form-section-title">Attach Vendor to Event</div>
+                @if (!availableVendors.Any())
+                {
+                    <div class="arena-empty-state">
+                        <div class="arena-empty-title">No Available Vendors</div>
+                        <p class="arena-empty-text">All vendors are already attached, or no vendors exist yet.</p>
+                        <a class="arena-primary-btn" href="/vendors/create">Add Vendor</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="mb-3">
+                        <label class="arena-label">Vendor</label>
+                        <InputSelect @bind-Value="form.VendorId" class="arena-select">
+                            <option value="0">Choose a vendor</option>
+                            @foreach (var vendor in availableVendors)
+                            {
+                                <option value="@vendor.Id">@vendor.Name (@vendor.Type)</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="() => form.VendorId" />
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(errorMessage))
+                    {
+                        <div class="arena-warning">@errorMessage</div>
+                    }
+
+                    <div class="arena-form-actions">
+                        <button type="submit" class="arena-primary-btn">Attach Vendor</button>
+                    </div>
+                }
+            </EditForm>
+        </div>
+
+        <div class="arena-card arena-table-card">
+            <div class="arena-form-section-title">Attached Vendors</div>
+            @if (!eventVendors.Any())
+            {
+                <div class="arena-empty-state">
+                    <div class="arena-empty-title">No vendors attached</div>
+                    <p class="arena-empty-text">Attach vendors before assigning booths.</p>
+                </div>
+            }
+            else
+            {
+                <table class="arena-table">
+                    <thead>
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Type</th>
+                            <th>Contact</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var vendor in eventVendors)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="arena-entity-title">@vendor.Name</div>
+                                    <div class="arena-muted">@vendor.Location</div>
+                                </td>
+                                <td>@vendor.Type</td>
+                                <td>@vendor.Phone</td>
+                                <td>
+                                    <button type="button" class="arena-link-danger" @onclick="() => RemoveVendorAsync(vendor.Id)">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int EventId { get; set; }
+
+    private Event? eventEntity;
+    private List<Vendor> eventVendors = new();
+    private List<Vendor> availableVendors = new();
+    private EventVendorFormModel form = new();
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        eventEntity = await EventService.GetEventByIdAsync(EventId);
+        eventVendors = eventEntity is null ? new List<Vendor>() : await VendorService.GetVendorsForEventAsync(EventId);
+        availableVendors = eventEntity is null ? new List<Vendor>() : await VendorService.GetAvailableVendorsForEventAsync(EventId);
+        form = new EventVendorFormModel { EventId = EventId };
+        isLoading = false;
+    }
+
+    private async Task AddVendorAsync()
+    {
+        errorMessage = null;
+        var added = await VendorService.AddVendorToEventAsync(form.VendorId, EventId);
+        if (!added)
+        {
+            errorMessage = "Vendor could not be attached to this event.";
+            return;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task RemoveVendorAsync(int vendorId)
+    {
+        errorMessage = null;
+        var removed = await VendorService.RemoveVendorFromEventAsync(vendorId, EventId);
+        if (!removed)
+        {
+            errorMessage = "Vendor could not be removed from this event.";
+            return;
+        }
+
+        await LoadAsync();
+    }
+
+    private class EventVendorFormModel
+    {
+        [System.ComponentModel.DataAnnotations.Range(1, int.MaxValue, ErrorMessage = "A vendor is required.")]
+        public int VendorId { get; set; }
+
+        public int EventId { get; set; }
+    }
+}

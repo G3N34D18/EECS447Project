@@ -1,0 +1,194 @@
+@page "/venues/{VenueId:int}/vendor-booths"
+@rendermode RenderMode.InteractiveServer
+@using ArenaSync.Web.Dtos
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@inject IVenueService VenueService
+@inject IFacilityService FacilityService
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Venues &gt; Vendor Booths</div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading vendor booths...</div>
+            </div>
+        </div>
+    }
+    else if (venue is null)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-title">Venue not found</div>
+            <p class="arena-empty-text">The requested venue could not be loaded.</p>
+            <a class="arena-primary-btn" href="/venues">Back to Venues</a>
+        </div>
+    }
+    else
+    {
+        <div class="arena-page-header">
+            <div>
+                <h1 class="arena-page-title">Vendor Booths</h1>
+                <p class="arena-page-subtitle">@venue.Name</p>
+            </div>
+            <a class="arena-primary-btn" href="/venues">Back to Venues</a>
+        </div>
+
+        <div class="arena-card arena-form-card">
+            <EditForm Model="form" OnValidSubmit="SaveAsync" FormName="vendor-booth-form">
+                <DataAnnotationsValidator />
+
+                <div class="arena-form-section-title">@(editingBoothId.HasValue ? "Edit Vendor Booth" : "Add Vendor Booth")</div>
+                <div class="arena-form-grid">
+                    <div class="mb-3">
+                        <label class="arena-label">Booth Number</label>
+                        <InputNumber @bind-Value="form.BoothNumber" class="arena-input" />
+                        <ValidationMessage For="() => form.BoothNumber" />
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="arena-warning">@errorMessage</div>
+                }
+
+                <div class="arena-form-actions">
+                    @if (editingBoothId.HasValue)
+                    {
+                        <button type="button" class="arena-secondary-btn" @onclick="CancelEdit">Cancel Edit</button>
+                    }
+                    <button type="submit" class="arena-primary-btn">@(editingBoothId.HasValue ? "Save Booth" : "Add Booth")</button>
+                </div>
+            </EditForm>
+        </div>
+
+        <div class="arena-card arena-table-card">
+            @if (!booths.Any())
+            {
+                <div class="arena-empty-state">
+                    <div class="arena-empty-title">No vendor booths yet</div>
+                    <p class="arena-empty-text">Add booths before assigning vendors to event space.</p>
+                </div>
+            }
+            else
+            {
+                <table class="arena-table">
+                    <thead>
+                        <tr>
+                            <th>Booth</th>
+                            <th>Assignments</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var booth in booths)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="arena-entity-title">Booth @booth.BoothNumber</div>
+                                </td>
+                                <td>@booth.VendorAssignments.Count</td>
+                                <td>
+                                    <div class="arena-actions">
+                                        <button type="button" class="arena-outline-btn" @onclick="() => BeginEdit(booth)">Edit</button>
+                                        <button type="button" class="arena-link-danger" @onclick="() => DeleteAsync(booth.Id)">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int VenueId { get; set; }
+
+    [SupplyParameterFromForm]
+    private VendorBoothFormModel form { get; set; } = new();
+
+    private Venue? venue;
+    private List<VendorBooth> booths = new();
+    private int? editingBoothId;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        venue = await VenueService.GetVenueByIdAsync(VenueId);
+        booths = venue is null
+            ? new List<VendorBooth>()
+            : await FacilityService.GetVendorBoothsForVenueAsync(VenueId);
+
+        form.VenueId = VenueId;
+        isLoading = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        errorMessage = null;
+        form.VenueId = VenueId;
+
+        var saved = editingBoothId.HasValue
+            ? await FacilityService.UpdateVendorBoothAsync(new VendorBooth
+            {
+                Id = editingBoothId.Value,
+                BoothNumber = form.BoothNumber,
+                VenueId = VenueId
+            })
+            : await FacilityService.CreateVendorBoothAsync(new VendorBooth
+            {
+                BoothNumber = form.BoothNumber,
+                VenueId = VenueId
+            });
+
+        if (!saved)
+        {
+            errorMessage = "Vendor booth could not be saved. Check for duplicate booth numbers or active assignments.";
+            return;
+        }
+
+        CancelEdit();
+        await LoadAsync();
+    }
+
+    private void BeginEdit(VendorBooth booth)
+    {
+        editingBoothId = booth.Id;
+        form = new VendorBoothFormModel
+        {
+            BoothNumber = booth.BoothNumber,
+            VenueId = booth.VenueId
+        };
+    }
+
+    private void CancelEdit()
+    {
+        editingBoothId = null;
+        form = new VendorBoothFormModel { VenueId = VenueId };
+        errorMessage = null;
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        errorMessage = null;
+        var deleted = await FacilityService.DeleteVendorBoothAsync(id);
+        if (!deleted)
+        {
+            errorMessage = "Vendor booth could not be deleted because it has assignments.";
+            return;
+        }
+
+        await LoadAsync();
+    }
+}

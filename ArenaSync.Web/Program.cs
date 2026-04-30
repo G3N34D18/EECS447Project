@@ -17,6 +17,9 @@ builder.Services.AddScoped<IAttendeeService, AttendeeService>();
 
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IVenueService, VenueService>();
+builder.Services.AddScoped<IVendorService, VendorService>();
+builder.Services.AddScoped<IFacilityService, FacilityService>();
+builder.Services.AddScoped<IAssignmentService, AssignmentService>();
 
 builder.Services.AddScoped<IParticipationService, ParticipationService>();
 
@@ -39,5 +42,4 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
-
 

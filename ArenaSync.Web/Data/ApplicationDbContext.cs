@@ -31,6 +31,7 @@ namespace ArenaSync.Web.Data
         public DbSet<TeamAssignment> TeamAssignments { get; set; }
         public DbSet<VendorAssignment> VendorAssignments { get; set; }
         public DbSet<TeamReassignmentRequest> TeamReassignmentRequests { get; set; } = null!;
+        public DbSet<TeamEventRequest> TeamEventRequests { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

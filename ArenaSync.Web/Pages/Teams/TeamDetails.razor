@@ -64,15 +64,20 @@
             </div>
         </div>
 
-        <!-- Event Assignments -->
-        <div class="arena-card arena-table-card">
-            <div class="arena-form-section-title">Event Assignments</div>
+        @if (!string.IsNullOrWhiteSpace(actionMessage))
+        {
+            <div class="arena-warning">@actionMessage</div>
+        }
 
-            @if (!team.Assignments.Any())
+        <!-- Event Registrations -->
+        <div class="arena-card arena-table-card">
+            <div class="arena-form-section-title">Event Registrations</div>
+
+            @if (!team.ParticipatesIn.Any())
             {
                 <div class="arena-empty-state">
-                    <div class="arena-empty-title">No Assignments</div>
-                    <p class="arena-empty-text">This team is not assigned to any events.</p>
+                    <div class="arena-empty-title">No Event Registrations</div>
+                    <p class="arena-empty-text">This team is not registered for any events.</p>
                     <a class="arena-primary-btn" href="/teams/assign/@TeamId">Assign to Event</a>
                 </div>
             }
@@ -83,20 +88,42 @@
                         <tr>
                             <th>Event</th>
                             <th>Date</th>
-                            <th></th>
+                            <th>Locker</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var a in team.Assignments)
+                        @foreach (var participation in team.ParticipatesIn.OrderBy(p => p.Event?.StartTime))
                         {
+                            var eventAssignment = team.Assignments.FirstOrDefault(a => a.EventId == participation.EventId);
+                            var eventEntity = participation.Event;
                             <tr>
-                                <td>@a.Event?.Name</td>
-                                <td>@a.Event?.StartTime.ToShortDateString()</td>
-                                <td class="text-end">
-                                    <a class="arena-outline-btn"
-                                       href="/teams/request-reassignment/@TeamId">
-                                        Request Reassignment
-                                    </a>
+                                <td>
+                                    <div class="arena-entity-title">@eventEntity?.Name</div>
+                                    <div class="arena-muted">@eventEntity?.Venue?.Name</div>
+                                </td>
+                                <td>@eventEntity?.StartTime.ToShortDateString()</td>
+                                <td>
+                                    @if (eventAssignment is null)
+                                    {
+                                        <span class="arena-muted">No locker assigned</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Room @eventAssignment.LockerRoom.RoomNumber</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="arena-actions">
+                                        <a class="arena-outline-btn" href="/teams/request-reassignment/@TeamId">Request Reassignment</a>
+                                        <button type="button"
+                                                class="arena-link-danger"
+                                                disabled="@(!CanResign(eventEntity))"
+                                                title="@GetResignTitle(eventEntity)"
+                                                @onclick="() => ResignAsync(participation.EventId)">
+                                            Resign
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -105,15 +132,45 @@
             }
         </div>
 
-        <!-- Pending Reassignment Requests -->
+        @if (team.ParticipatesIn.Any())
+        {
+            <div class="arena-card arena-form-card">
+                <div class="arena-form-section-title">Request Late Resignation</div>
+                <p class="arena-muted">Use this when a team needs to leave an event inside the 48-hour resignation window.</p>
+
+                <div class="arena-form-grid">
+                    <div class="mb-3">
+                        <label class="arena-label">Event</label>
+                        <select class="arena-select" @bind="selectedResignationEventId">
+                            <option value="0">Choose an event</option>
+                            @foreach (var participation in team.ParticipatesIn.OrderBy(p => p.Event?.StartTime))
+                            {
+                                <option value="@participation.EventId">@participation.Event?.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="arena-label">Explanation</label>
+                        <textarea class="arena-textarea" @bind="resignationReason"></textarea>
+                    </div>
+                </div>
+
+                <div class="arena-form-actions">
+                    <button type="button" class="arena-primary-btn" @onclick="SubmitLateResignationAsync">Submit Resignation Request</button>
+                </div>
+            </div>
+        }
+
+        <!-- Pending Event Requests -->
         <div class="arena-card arena-table-card">
-            <div class="arena-form-section-title">Pending Reassignment Requests</div>
+            <div class="arena-form-section-title">Pending Event Requests</div>
 
             @if (!pendingRequests.Any())
             {
                 <div class="arena-empty-state">
                     <div class="arena-empty-title">No Pending Requests</div>
-                    <p class="arena-empty-text">There are no pending reassignment requests for this team.</p>
+                    <p class="arena-empty-text">There are no pending event requests for this team.</p>
                 </div>
             }
             else
@@ -121,7 +178,9 @@
                 <table class="arena-table">
                     <thead>
                         <tr>
-                            <th>Requested Event</th>
+                            <th>Type</th>
+                            <th>Source Event</th>
+                            <th>Target Event</th>
                             <th>Reason</th>
                             <th>Submitted</th>
                             <th>Status</th>
@@ -131,7 +190,9 @@
                         @foreach (var r in pendingRequests)
                         {
                             <tr>
-                                <td>@r.RequestedEvent?.Name</td>
+                                <td>@FormatRequestType(r.Type)</td>
+                                <td>@(r.SourceEvent?.Name ?? "-")</td>
+                                <td>@(r.TargetEvent?.Name ?? "-")</td>
                                 <td>@r.Reason</td>
                                 <td>@r.SubmittedAt.ToShortDateString()</td>
                                 <td>
@@ -150,9 +211,12 @@
     [Parameter] public int TeamId { get; set; }
 
     private Team? team;
-    private List<TeamReassignmentRequest> pendingRequests = new();
+    private List<TeamEventRequest> pendingRequests = new();
+    private int selectedResignationEventId;
+    private string resignationReason = string.Empty;
     private bool isLoading = true;
     private bool teamNotFound;
+    private string? actionMessage;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -170,5 +234,56 @@
         }
 
         isLoading = false;
+    }
+
+    private async Task ResignAsync(int eventId)
+    {
+        actionMessage = null;
+        var result = await TeamService.ResignTeamFromEventAsync(TeamId, eventId);
+        actionMessage = result.Message;
+        await OnParametersSetAsync();
+    }
+
+    private async Task SubmitLateResignationAsync()
+    {
+        actionMessage = null;
+        if (selectedResignationEventId == 0)
+        {
+            actionMessage = "Choose an event for the resignation request.";
+            return;
+        }
+
+        var result = await TeamService.SubmitLateResignationRequestAsync(TeamId, selectedResignationEventId, resignationReason);
+        actionMessage = result.Message;
+        if (result.Succeeded)
+        {
+            selectedResignationEventId = 0;
+            resignationReason = string.Empty;
+        }
+
+        await OnParametersSetAsync();
+    }
+
+    private static bool CanResign(Event? eventEntity)
+    {
+        return eventEntity is not null && eventEntity.StartTime > DateTime.Now.AddHours(48);
+    }
+
+    private static string GetResignTitle(Event? eventEntity)
+    {
+        return CanResign(eventEntity)
+            ? "Resign from this event"
+            : "Use a late resignation request inside the 48-hour window.";
+    }
+
+    private static string FormatRequestType(TeamEventRequestType type)
+    {
+        return type switch
+        {
+            TeamEventRequestType.Reassignment => "Reassignment",
+            TeamEventRequestType.LateResignation => "Late Resignation",
+            TeamEventRequestType.OverlapParticipation => "Overlap Participation",
+            _ => type.ToString()
+        };
     }
 }

@@ -1,5 +1,3 @@
-using ArenaSync.Web.Pages.Events;
-
 namespace ArenaSync.Web.Models
 {
     public class Vendor

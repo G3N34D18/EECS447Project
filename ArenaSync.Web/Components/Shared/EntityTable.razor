@@ -1,0 +1,154 @@
+@typeparam TItem
+@using ArenaSync.Web.Dtos
+
+<div class="arena-entity-table">
+    @if (ShowSearch)
+    {
+        <div class="arena-table-toolbar">
+            <input class="arena-input arena-table-search"
+                   placeholder="@SearchPlaceholder"
+                   value="@searchText"
+                   @oninput="OnSearchChanged" />
+        </div>
+    }
+
+    @if (!PagedItems.Any())
+    {
+        <div class="arena-empty-state arena-empty-state-compact">
+            <div class="arena-empty-title">@EmptyTitle</div>
+            <p class="arena-empty-text">@EmptyMessage</p>
+        </div>
+    }
+    else
+    {
+        <table class="arena-table">
+            <thead>
+                <tr>
+                    @foreach (var column in Columns)
+                    {
+                        <th>
+                            <button type="button" class="arena-column-sort" @onclick="() => SortBy(column)">
+                                @column.Header
+                                @if (sortColumn == column)
+                                {
+                                    <span>@(sortAscending ? "^" : "v")</span>
+                                }
+                            </button>
+                        </th>
+                    }
+                    @if (RowActions is not null)
+                    {
+                        <th>Actions</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in PagedItems)
+                {
+                    <tr>
+                        @foreach (var column in Columns)
+                        {
+                            <td>@column.Value(item)</td>
+                        }
+                        @if (RowActions is not null)
+                        {
+                            <td>@RowActions(item)</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (TotalPages > 1)
+        {
+            <div class="arena-pagination">
+                <button type="button" class="arena-table-action" disabled="@(pageIndex == 0)" @onclick="PreviousPage">Previous</button>
+                <span class="arena-muted">Page @(pageIndex + 1) of @TotalPages</span>
+                <button type="button" class="arena-table-action" disabled="@(pageIndex >= TotalPages - 1)" @onclick="NextPage">Next</button>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<TItem> Items { get; set; } = Array.Empty<TItem>();
+    [Parameter] public IReadOnlyList<EntityTableColumn<TItem>> Columns { get; set; } = Array.Empty<EntityTableColumn<TItem>>();
+    [Parameter] public RenderFragment<TItem>? RowActions { get; set; }
+    [Parameter] public bool ShowSearch { get; set; } = true;
+    [Parameter] public string SearchPlaceholder { get; set; } = "Search";
+    [Parameter] public string EmptyTitle { get; set; } = "No records";
+    [Parameter] public string EmptyMessage { get; set; } = "There is nothing to show yet.";
+    [Parameter] public int PageSize { get; set; } = 10;
+
+    private string searchText = string.Empty;
+    private int pageIndex;
+    private EntityTableColumn<TItem>? sortColumn;
+    private bool sortAscending = true;
+
+    private IEnumerable<TItem> FilteredItems
+    {
+        get
+        {
+            var query = Items.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                query = query.Where(item => Columns.Any(column =>
+                    column.Value(item).Contains(searchText, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            if (sortColumn is not null)
+            {
+                query = sortAscending
+                    ? query.OrderBy(item => sortColumn.Value(item))
+                    : query.OrderByDescending(item => sortColumn.Value(item));
+            }
+
+            return query;
+        }
+    }
+
+    private List<TItem> PagedItems => FilteredItems
+        .Skip(pageIndex * PageSize)
+        .Take(PageSize)
+        .ToList();
+
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling(FilteredItems.Count() / (double)PageSize));
+
+    private void SortBy(EntityTableColumn<TItem> column)
+    {
+        if (sortColumn == column)
+        {
+            sortAscending = !sortAscending;
+        }
+        else
+        {
+            sortColumn = column;
+            sortAscending = true;
+        }
+
+        pageIndex = 0;
+    }
+
+    private void OnSearchChanged(ChangeEventArgs args)
+    {
+        searchText = args.Value?.ToString() ?? string.Empty;
+        pageIndex = 0;
+    }
+
+    private void PreviousPage()
+    {
+        if (pageIndex > 0)
+        {
+            pageIndex--;
+        }
+    }
+
+    private void NextPage()
+    {
+        if (pageIndex < TotalPages - 1)
+        {
+            pageIndex++;
+        }
+    }
+}

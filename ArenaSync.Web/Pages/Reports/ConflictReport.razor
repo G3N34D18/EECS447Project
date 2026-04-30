@@ -1,0 +1,89 @@
+@page "/reports/conflicts"
+@rendermode RenderMode.InteractiveServer
+@inject IEventService EventService
+@inject IReportingService ReportingService
+
+<PageTitle>Conflict Report</PageTitle>
+
+<div class="arena-page">
+    <ReportHeader Title="Conflict Report"
+                  Subtitle="Missing assignments and resource conflicts across events."
+                  ExportHref="@ConflictExportHref" />
+
+    <div class="arena-card arena-form-card">
+        <div class="arena-report-filter">
+            <div>
+                <label class="arena-label">Event Filter</label>
+                <select class="arena-select" value="@selectedEventId" @onchange="OnEventChanged">
+                    <option value="0">All events</option>
+                    @foreach (var eventEntity in events)
+                    {
+                        <option value="@eventEntity.Id">@eventEntity.Name</option>
+                    }
+                </select>
+            </div>
+            <button type="button" class="arena-primary-btn" @onclick="LoadReportAsync">Refresh</button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-title">Loading conflict report...</div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="arena-stat-grid">
+            <SummaryPanel Label="Total Conflicts" Value="@conflicts.Count.ToString()" Detail="All severities" />
+            <SummaryPanel Label="Critical" Value="@conflicts.Count(c => c.Severity == AssignmentConflictSeverity.Critical).ToString()" Detail="Requires immediate cleanup" />
+            <SummaryPanel Label="Warnings" Value="@conflicts.Count(c => c.Severity == AssignmentConflictSeverity.Warning).ToString()" Detail="Operational gaps" />
+        </div>
+
+        <div class="arena-card arena-table-card">
+            <div class="arena-form-section-title">Conflicts</div>
+            <EntityTable TItem="ConflictReportRowDto" Items="conflicts" Columns="conflictColumns" EmptyTitle="No conflicts" EmptyMessage="No assignment conflicts match this filter." />
+        </div>
+    }
+</div>
+
+@code {
+    private List<Event> events = new();
+    private List<ConflictReportRowDto> conflicts = new();
+    private int selectedEventId;
+    private bool isLoading;
+    private string ConflictExportHref => selectedEventId == 0
+        ? $"/reports/export?type={ReportType.ConflictSummary}"
+        : $"/reports/export?type={ReportType.ConflictSummary}&entityId={selectedEventId}";
+
+    private readonly List<EntityTableColumn<ConflictReportRowDto>> conflictColumns =
+    [
+        new() { Header = "Event", Value = c => c.EventName },
+        new() { Header = "Venue", Value = c => c.VenueName },
+        new() { Header = "Severity", Value = c => c.Severity.ToString() },
+        new() { Header = "Type", Value = c => c.Type },
+        new() { Header = "Affected", Value = c => c.AffectedEntity },
+        new() { Header = "Description", Value = c => c.Description }
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        events = await EventService.GetAllEventsAsync();
+        await LoadReportAsync();
+    }
+
+    private async Task OnEventChanged(ChangeEventArgs args)
+    {
+        selectedEventId = int.TryParse(args.Value?.ToString(), out var id) ? id : 0;
+        await LoadReportAsync();
+    }
+
+    private async Task LoadReportAsync()
+    {
+        isLoading = true;
+        conflicts = await ReportingService.GetConflictSummaryAsync(selectedEventId == 0 ? null : selectedEventId);
+        isLoading = false;
+    }
+}

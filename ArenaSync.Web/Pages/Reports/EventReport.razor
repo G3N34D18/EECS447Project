@@ -1,0 +1,116 @@
+@page "/reports/events"
+@rendermode RenderMode.InteractiveServer
+@inject IEventService EventService
+@inject IReportingService ReportingService
+
+<PageTitle>Event Report</PageTitle>
+
+<div class="arena-page">
+    <ReportHeader Title="Event Report"
+                  Subtitle="Roster, attendee, vendor, and space assignment details for one event."
+                  ExportHref="@(selectedEventId == 0 ? null : $"/reports/export?type={ReportType.EventRoster}&entityId={selectedEventId}")" />
+
+    <div class="arena-card arena-form-card">
+        <div class="arena-report-filter">
+            <div>
+                <label class="arena-label">Event</label>
+                <select class="arena-select" value="@selectedEventId" @onchange="OnEventChanged">
+                    <option value="0">Choose an event</option>
+                    @foreach (var eventEntity in events)
+                    {
+                        <option value="@eventEntity.Id">@eventEntity.Name</option>
+                    }
+                </select>
+            </div>
+            <button type="button" class="arena-primary-btn" @onclick="LoadReportAsync" disabled="@(selectedEventId == 0)">Refresh</button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-title">Loading event report...</div>
+            </div>
+        </div>
+    }
+    else if (report is not null)
+    {
+        <div class="arena-stat-grid">
+            <SummaryPanel Label="Teams" Value="@report.Teams.Count.ToString()" Detail="Participating teams" />
+            <SummaryPanel Label="Attendees" Value="@report.Attendees.Count.ToString()" Detail="Registered attendees" />
+            <SummaryPanel Label="Vendors" Value="@report.Vendors.Count.ToString()" Detail="Attached vendors" />
+            <SummaryPanel Label="Venue" Value="@report.VenueName" Detail="@($"{report.StartTime:MMM d, yyyy h:mm tt}")" />
+        </div>
+
+        <div class="arena-card arena-table-card">
+            <div class="arena-form-section-title">Teams</div>
+            <EntityTable TItem="EventRosterTeamDto" Items="report.Teams" Columns="teamColumns" EmptyTitle="No teams" EmptyMessage="No teams are participating in this event." />
+        </div>
+
+        <div class="arena-card arena-table-card">
+            <div class="arena-form-section-title">Attendees</div>
+            <EntityTable TItem="EventRosterAttendeeDto" Items="report.Attendees" Columns="attendeeColumns" EmptyTitle="No attendees" EmptyMessage="No attendees are registered for this event." />
+        </div>
+
+        <div class="arena-card arena-table-card">
+            <div class="arena-form-section-title">Vendors</div>
+            <EntityTable TItem="EventRosterVendorDto" Items="report.Vendors" Columns="vendorColumns" EmptyTitle="No vendors" EmptyMessage="No vendors are attached to this event." />
+        </div>
+    }
+</div>
+
+@code {
+    private List<Event> events = new();
+    private EventRosterDto? report;
+    private int selectedEventId;
+    private bool isLoading;
+
+    private readonly List<EntityTableColumn<EventRosterTeamDto>> teamColumns =
+    [
+        new() { Header = "Team", Value = t => t.TeamName },
+        new() { Header = "Manager", Value = t => t.Manager },
+        new() { Header = "Players", Value = t => t.PlayerCount.ToString() },
+        new() { Header = "Locker", Value = t => t.LockerRoom }
+    ];
+
+    private readonly List<EntityTableColumn<EventRosterAttendeeDto>> attendeeColumns =
+    [
+        new() { Header = "Name", Value = a => a.Name },
+        new() { Header = "Email", Value = a => a.Email },
+        new() { Header = "Phone", Value = a => a.Phone }
+    ];
+
+    private readonly List<EntityTableColumn<EventRosterVendorDto>> vendorColumns =
+    [
+        new() { Header = "Vendor", Value = v => v.VendorName },
+        new() { Header = "Type", Value = v => v.Type },
+        new() { Header = "Booth", Value = v => v.Booth }
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        events = await EventService.GetAllEventsAsync();
+        selectedEventId = events.FirstOrDefault()?.Id ?? 0;
+        await LoadReportAsync();
+    }
+
+    private async Task OnEventChanged(ChangeEventArgs args)
+    {
+        selectedEventId = int.TryParse(args.Value?.ToString(), out var id) ? id : 0;
+        await LoadReportAsync();
+    }
+
+    private async Task LoadReportAsync()
+    {
+        if (selectedEventId == 0)
+        {
+            report = null;
+            return;
+        }
+
+        isLoading = true;
+        report = await ReportingService.GetEventRosterAsync(selectedEventId);
+        isLoading = false;
+    }
+}

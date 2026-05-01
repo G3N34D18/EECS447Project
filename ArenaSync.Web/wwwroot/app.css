@@ -172,6 +172,19 @@ body {
     text-decoration: none;
 }
 
+button.arena-link-danger {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+button.arena-link-danger:disabled {
+    color: var(--arena-text-muted);
+    cursor: not-allowed;
+    opacity: .65;
+}
+
 .arena-form-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -251,6 +264,72 @@ body {
     border-radius: 1rem;
     padding: 1rem 1.1rem;
     margin: 1rem 0 1.25rem;
+}
+
+.arena-info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .8rem 0;
+    border-bottom: 1px solid var(--arena-border);
+}
+
+    .arena-info-row:last-child {
+        border-bottom: 0;
+    }
+
+.arena-info-label {
+    color: var(--arena-text-muted);
+    font-weight: 700;
+}
+
+.arena-info-value {
+    color: var(--arena-text);
+    text-align: right;
+}
+
+.arena-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid var(--arena-border);
+    color: var(--arena-text);
+    background: var(--arena-surface-alt);
+    padding: .3rem .65rem;
+    font-size: .82rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.arena-conflict-panel {
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.arena-conflict-list {
+    display: grid;
+    gap: .75rem;
+}
+
+.arena-conflict-item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    border: 1px solid var(--arena-border);
+    border-radius: .95rem;
+    padding: .9rem 1rem;
+    background: var(--arena-surface-alt);
+}
+
+.arena-conflict-critical {
+    border-color: #f1b4b0;
+    background: #fff3f2;
+}
+
+.arena-conflict-warning {
+    border-color: #f0ddb0;
+    background: #fff8e8;
 }
 
 .arena-empty-state {
@@ -397,4 +476,3 @@ body {
     border: 1px solid transparent;
     color: var(--arena-danger);
 }
-

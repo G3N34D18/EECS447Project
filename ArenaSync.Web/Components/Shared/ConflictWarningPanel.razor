@@ -1,0 +1,25 @@
+@using ArenaSync.Web.Dtos
+
+@if (Conflicts.Any())
+{
+    <div class="arena-card arena-conflict-panel">
+        <div class="arena-form-section-title">@Title</div>
+        <div class="arena-conflict-list">
+            @foreach (var conflict in Conflicts)
+            {
+                <div class="arena-conflict-item arena-conflict-@conflict.Severity.ToString().ToLowerInvariant()">
+                    <div>
+                        <div class="arena-entity-title">@conflict.Type</div>
+                        <div class="arena-muted">@conflict.Description</div>
+                    </div>
+                    <span class="arena-badge">@conflict.AffectedEntity</span>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Title { get; set; } = "Assignment Warnings";
+    [Parameter] public IReadOnlyList<AssignmentConflictDto> Conflicts { get; set; } = Array.Empty<AssignmentConflictDto>();
+}

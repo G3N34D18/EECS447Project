@@ -68,7 +68,7 @@
                     <div class="arena-empty-state">
                         <div class="arena-empty-title">No Available Events</div>
                         <p class="arena-empty-text">
-                            All events are either full or this team is already assigned to them.
+                            This team is already registered for every available event.
                         </p>
                     </div>
                 }
@@ -84,6 +84,12 @@
                             }
                         </InputSelect>
                         <ValidationMessage For="@(() => form.EventId)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="arena-label">Overlap Explanation</label>
+                        <InputTextArea @bind-Value="overlapReason" class="arena-textarea" />
+                        <div class="arena-muted">Required only if the selected event overlaps one of this team's current events.</div>
                     </div>
 
                     @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -107,6 +113,7 @@
     private Team? team;
     private List<Event> availableEvents = new();
     private ParticipationFormModel form = new();
+    private string overlapReason = string.Empty;
     private bool isLoading = true;
     private bool teamNotFound;
     private string? errorMessage;
@@ -132,12 +139,32 @@
     {
         errorMessage = null;
 
-        var success = await ParticipationService.AssignTeamToEventAsync(
-            form.TeamId, form.EventId!.Value);
+        var eventId = form.EventId!.Value;
+        var overlaps = await TeamService.GetOverlappingEventsForTeamAsync(form.TeamId, eventId);
+        if (overlaps.Any())
+        {
+            if (string.IsNullOrWhiteSpace(overlapReason))
+            {
+                errorMessage = $"This event overlaps with {string.Join(", ", overlaps.Select(e => e.Name))}. Add an explanation to submit it for approval.";
+                return;
+            }
+
+            var requestResult = await TeamService.SubmitOverlapParticipationRequestAsync(form.TeamId, eventId, overlapReason);
+            if (!requestResult.Succeeded)
+            {
+                errorMessage = requestResult.Message;
+                return;
+            }
+
+            Navigation.NavigateTo($"/teams/details/{TeamId}");
+            return;
+        }
+
+        var success = await TeamService.AssignTeamToEventAsync(form.TeamId, eventId);
 
         if (!success)
         {
-            errorMessage = "This team is already assigned, or the event already has 2 teams.";
+            errorMessage = "This team could not be assigned to the event.";
             return;
         }
 

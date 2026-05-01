@@ -1,0 +1,86 @@
+@page "/vendors/create"
+@using ArenaSync.Web.Dtos
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@inject IVendorService VendorService
+@inject NavigationManager Navigation
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Vendors &gt; Add Vendor</div>
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Add Vendor</h1>
+            <p class="arena-page-subtitle">Create a vendor profile for event booth assignment.</p>
+        </div>
+        <a class="arena-primary-btn" href="/vendors">Back to Vendors</a>
+    </div>
+
+    <div class="arena-card arena-form-card">
+        <EditForm Model="form" OnValidSubmit="HandleSubmitAsync" FormName="vendor-create-form">
+            <DataAnnotationsValidator />
+
+            <div class="arena-form-section-title">Vendor Information</div>
+
+            <div class="mb-3">
+                <label class="arena-label">Name</label>
+                <InputText @bind-Value="form.Name" class="arena-input" />
+                <ValidationMessage For="() => form.Name" />
+            </div>
+
+            <div class="mb-3">
+                <label class="arena-label">Type</label>
+                <InputText @bind-Value="form.Type" class="arena-input" />
+                <ValidationMessage For="() => form.Type" />
+            </div>
+
+            <div class="mb-3">
+                <label class="arena-label">Location</label>
+                <InputText @bind-Value="form.Location" class="arena-input" />
+                <ValidationMessage For="() => form.Location" />
+            </div>
+
+            <div class="mb-3">
+                <label class="arena-label">Phone</label>
+                <InputText @bind-Value="form.Phone" class="arena-input" />
+                <ValidationMessage For="() => form.Phone" />
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="arena-warning">@errorMessage</div>
+            }
+
+            <div class="arena-form-actions">
+                <a class="arena-secondary-btn" href="/vendors">Cancel</a>
+                <button type="submit" class="arena-primary-btn">Create Vendor</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private VendorFormModel form { get; set; } = new();
+
+    private string? errorMessage;
+
+    private async Task HandleSubmitAsync()
+    {
+        var vendor = new Vendor
+        {
+            Name = form.Name,
+            Type = form.Type,
+            Location = form.Location,
+            Phone = form.Phone
+        };
+
+        var created = await VendorService.CreateVendorAsync(vendor);
+        if (!created)
+        {
+            errorMessage = "A vendor with this name already exists.";
+            return;
+        }
+
+        Navigation.NavigateTo("/vendors");
+    }
+}

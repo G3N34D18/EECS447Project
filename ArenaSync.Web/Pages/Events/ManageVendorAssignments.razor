@@ -1,0 +1,197 @@
+@page "/events/{EventId:int}/vendor-assignments"
+@rendermode RenderMode.InteractiveServer
+@using ArenaSync.Web.Components.Shared
+@using ArenaSync.Web.Dtos
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@inject IEventService EventService
+@inject IVendorService VendorService
+@inject IAssignmentService AssignmentService
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Events &gt; Vendor Booth Assignments</div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading vendor assignments...</div>
+            </div>
+        </div>
+    }
+    else if (eventEntity is null)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-title">Event not found</div>
+            <p class="arena-empty-text">The requested event could not be loaded.</p>
+            <a class="arena-primary-btn" href="/events">Back to Events</a>
+        </div>
+    }
+    else
+    {
+        <div class="arena-page-header">
+            <div>
+                <h1 class="arena-page-title">Vendor Booth Assignments</h1>
+                <p class="arena-page-subtitle">@eventEntity.Name at @eventEntity.Venue?.Name</p>
+            </div>
+            <div class="arena-actions">
+                <a class="arena-outline-btn" href="/events/@EventId/vendors">Event Vendors</a>
+                <a class="arena-primary-btn" href="/events">Back to Events</a>
+            </div>
+        </div>
+
+        <ConflictWarningPanel Conflicts="conflicts" Title="Vendor Assignment Warnings" />
+
+        <div class="arena-card arena-form-card">
+            <EditForm Model="form" OnValidSubmit="AssignAsync" FormName="vendor-booth-assignment-form">
+                <DataAnnotationsValidator />
+
+                <div class="arena-form-section-title">Assign Vendor to Booth</div>
+
+                @if (!assignableVendors.Any())
+                {
+                    <div class="arena-empty-state">
+                        <div class="arena-empty-title">No Vendors Available</div>
+                        <p class="arena-empty-text">Attach vendors to this event before assigning booths.</p>
+                        <a class="arena-primary-btn" href="/events/@EventId/vendors">Attach Vendors</a>
+                    </div>
+                }
+                else if (!availableBooths.Any())
+                {
+                    <div class="arena-empty-state">
+                        <div class="arena-empty-title">No Booths Available</div>
+                        <p class="arena-empty-text">Add booths to this event's venue or free an existing assignment.</p>
+                        <a class="arena-primary-btn" href="/venues/@eventEntity.VenueId/vendor-booths">Manage Booths</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="arena-form-grid">
+                        <div class="mb-3">
+                            <label class="arena-label">Vendor</label>
+                            <InputSelect @bind-Value="form.VendorId" class="arena-select">
+                                <option value="0">Choose a vendor</option>
+                                @foreach (var vendor in assignableVendors)
+                                {
+                                    <option value="@vendor.Id">@vendor.Name (@vendor.Type)</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="() => form.VendorId" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="arena-label">Booth</label>
+                            <InputSelect @bind-Value="form.BoothId" class="arena-select">
+                                <option value="0">Choose a booth</option>
+                                @foreach (var booth in availableBooths)
+                                {
+                                    <option value="@booth.Id">Booth @booth.BoothNumber</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="() => form.BoothId" />
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(errorMessage))
+                    {
+                        <div class="arena-warning">@errorMessage</div>
+                    }
+
+                    <div class="arena-form-actions">
+                        <button type="submit" class="arena-primary-btn">Assign Booth</button>
+                    </div>
+                }
+            </EditForm>
+        </div>
+
+        <div class="arena-card arena-table-card">
+            <div class="arena-form-section-title">Current Booth Assignments</div>
+            @if (!assignments.Any())
+            {
+                <div class="arena-empty-state">
+                    <div class="arena-empty-title">No booth assignments</div>
+                    <p class="arena-empty-text">Assign vendors to booths as event setup is confirmed.</p>
+                </div>
+            }
+            else
+            {
+                <table class="arena-table">
+                    <thead>
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Booth</th>
+                            <th>Venue</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var assignment in assignments)
+                        {
+                            <tr>
+                                <td>@assignment.Vendor?.Name</td>
+                                <td>Booth @assignment.Booth?.BoothNumber</td>
+                                <td>@assignment.Booth?.Venue?.Name</td>
+                                <td>
+                                    <button type="button" class="arena-link-danger" @onclick="() => RemoveAsync(assignment)">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int EventId { get; set; }
+
+    private Event? eventEntity;
+    private List<Vendor> vendors = new();
+    private List<Vendor> assignableVendors = new();
+    private List<VendorBooth> availableBooths = new();
+    private List<VendorAssignment> assignments = new();
+    private List<AssignmentConflictDto> conflicts = new();
+    private VendorAssignmentFormModel form = new();
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        eventEntity = await EventService.GetEventByIdAsync(EventId);
+        assignments = eventEntity is null ? new List<VendorAssignment>() : await AssignmentService.GetVendorAssignmentsForEventAsync(EventId);
+        vendors = eventEntity is null ? new List<Vendor>() : await VendorService.GetVendorsForEventAsync(EventId);
+        assignableVendors = vendors.Where(v => assignments.All(a => a.VendorId != v.Id)).ToList();
+        availableBooths = eventEntity is null ? new List<VendorBooth>() : await AssignmentService.GetAvailableVendorBoothsForEventAsync(EventId);
+        conflicts = eventEntity is null ? new List<AssignmentConflictDto>() : await AssignmentService.GetAssignmentConflictsAsync(EventId);
+        form = new VendorAssignmentFormModel { EventId = EventId };
+        isLoading = false;
+    }
+
+    private async Task AssignAsync()
+    {
+        errorMessage = null;
+        var result = await AssignmentService.AssignVendorToBoothAsync(form.VendorId, EventId, form.BoothId);
+        if (!result.Succeeded)
+        {
+            errorMessage = result.Message;
+            return;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task RemoveAsync(VendorAssignment assignment)
+    {
+        errorMessage = null;
+        await AssignmentService.RemoveVendorBoothAssignmentAsync(assignment.VendorId, assignment.EventId, assignment.BoothId);
+        await LoadAsync();
+    }
+}

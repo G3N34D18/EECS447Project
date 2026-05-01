@@ -1,0 +1,83 @@
+@page "/vendors/delete/{Id:int}"
+@rendermode RenderMode.InteractiveServer
+@using ArenaSync.Web.Models
+@using ArenaSync.Web.Services
+@inject IVendorService VendorService
+@inject NavigationManager Navigation
+
+<div class="arena-page">
+    <div class="arena-breadcrumb">Vendors &gt; Delete Vendor</div>
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Delete Vendor</h1>
+            <p class="arena-page-subtitle">Review the vendor before removing it from the system.</p>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading vendor...</div>
+            </div>
+        </div>
+    }
+    else if (vendor is null)
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-empty-title">Vendor not found</div>
+            <p class="arena-empty-text">The requested vendor could not be loaded.</p>
+            <a class="arena-primary-btn" href="/vendors">Back to Vendors</a>
+        </div>
+    }
+    else
+    {
+        <div class="arena-card arena-delete-card">
+            <div class="arena-form-section-title">Are you sure you want to delete this vendor?</div>
+            <p class="arena-muted">Vendors with event or booth assignments cannot be deleted.</p>
+
+            <div class="arena-summary-box">
+                <div class="arena-entity-title">@vendor.Name</div>
+                <div class="arena-muted">@vendor.Type</div>
+                <div class="arena-muted">@vendor.Phone</div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="arena-warning">@errorMessage</div>
+            }
+
+            <div class="arena-form-actions">
+                <a class="arena-secondary-btn" href="/vendors">Cancel</a>
+                <button class="arena-danger-btn" @onclick="DeleteVendorAsync">Delete Vendor</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Vendor? vendor;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        vendor = await VendorService.GetVendorByIdAsync(Id);
+        isLoading = false;
+    }
+
+    private async Task DeleteVendorAsync()
+    {
+        var deleted = await VendorService.DeleteVendorAsync(Id);
+        if (!deleted)
+        {
+            errorMessage = "Vendor could not be deleted because it has event or booth assignments.";
+            return;
+        }
+
+        Navigation.NavigateTo("/vendors");
+    }
+}

@@ -39,51 +39,64 @@
             <div class="arena-empty-state">
                 <div class="arena-empty-title">Request Submitted</div>
                 <p class="arena-empty-text">
-                    Your reassignment request for <strong>@team!.Name</strong> has been sent to an admin for review.
+                    The reassignment request for <strong>@team!.Name</strong> has been sent to an admin for review.
                 </p>
-                <a class="arena-primary-btn" href="/teams">Back to Teams</a>
+                <a class="arena-primary-btn" href="/teams/details/@TeamId">Back to Team</a>
             </div>
         </div>
     }
     else
     {
         <div class="arena-card arena-form-card">
-
-            <div class="arena-form-section-title">Current Assignment</div>
-            @if (team!.Assignments.Count == 0)
+            <div class="arena-form-section-title">Current Registrations</div>
+            @if (team!.ParticipatesIn.Count == 0)
             {
-                <p class="arena-muted">This team is not currently assigned to any event.</p>
+                <p class="arena-muted">This team is not currently registered for any event.</p>
+                <div class="arena-warning">A team must be registered for an event before it can request reassignment.</div>
             }
             else
             {
                 <div class="arena-summary-box">
-                    @foreach (var a in team.Assignments)
+                    @foreach (var p in team.ParticipatesIn.OrderBy(p => p.Event?.StartTime))
                     {
-                        <div class="arena-entity-title">@a.Event?.Name</div>
-                        <div class="arena-muted">@a.Event?.StartTime.ToShortDateString()</div>
+                        <div class="arena-entity-title">@p.Event?.Name</div>
+                        <div class="arena-muted">@p.Event?.StartTime.ToShortDateString()</div>
                     }
                 </div>
+
+                <div class="arena-form-section-title" style="margin-top:1.5rem;">Reassignment Request</div>
+
+                <div class="arena-form-grid">
+                    <div class="mb-3">
+                        <label class="arena-label">Current Event</label>
+                        <select class="arena-select" @bind="selectedSourceEventId">
+                            <option value="0">Choose current event</option>
+                            @foreach (var participation in team.ParticipatesIn.OrderBy(p => p.Event?.StartTime))
+                            {
+                                <option value="@participation.EventId">@participation.Event?.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="arena-label">Requested Event</label>
+                        <select class="arena-select" @bind="selectedTargetEventId">
+                            <option value="0">Choose requested event</option>
+                            @foreach (var ev in availableEvents)
+                            {
+                                <option value="@ev.Id">@ev.Name - @ev.StartTime.ToShortDateString()</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="arena-label">Reason for Reassignment</label>
+                    <textarea class="arena-input" rows="3"
+                              @bind="reason"
+                              placeholder="Briefly explain why this reassignment is needed..."></textarea>
+                </div>
             }
-
-            <div class="arena-form-section-title" style="margin-top:1.5rem;">Reassignment Request</div>
-
-            <div class="mb-3">
-                <label class="arena-label">Requested Event</label>
-                <select class="arena-select" @onchange="OnEventSelected">
-                    <option value="">Choose an event</option>
-                    @foreach (var ev in availableEvents)
-                    {
-                        <option value="@ev.Id">@ev.Name — @ev.StartTime.ToShortDateString()</option>
-                    }
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label class="arena-label">Reason for Reassignment</label>
-                <textarea class="arena-input" rows="3"
-                          @bind="reason"
-                          placeholder="Briefly explain why this reassignment is needed..."></textarea>
-            </div>
 
             @if (!string.IsNullOrWhiteSpace(errorMessage))
             {
@@ -91,8 +104,11 @@
             }
 
             <div class="arena-form-actions">
-                <a class="arena-secondary-btn" href="/teams">Cancel</a>
-                <button class="arena-primary-btn" @onclick="SubmitRequestAsync">Submit Request</button>
+                <a class="arena-secondary-btn" href="/teams/details/@TeamId">Cancel</a>
+                @if (team.ParticipatesIn.Any())
+                {
+                    <button class="arena-primary-btn" @onclick="SubmitRequestAsync">Submit Request</button>
+                }
             </div>
         </div>
     }
@@ -103,7 +119,8 @@
 
     private Team? team;
     private List<Event> availableEvents = new();
-    private int? selectedEventId;
+    private int selectedSourceEventId;
+    private int selectedTargetEventId;
     private string reason = string.Empty;
     private bool isLoading = true;
     private bool teamNotFound;
@@ -121,40 +138,35 @@
         else
         {
             var allEvents = await EventService.GetAllEventsAsync();
-            var assignedEventIds = team.Assignments.Select(a => a.EventId).ToHashSet();
+            var assignedEventIds = team.ParticipatesIn.Select(p => p.EventId).ToHashSet();
             availableEvents = allEvents.Where(e => !assignedEventIds.Contains(e.Id)).ToList();
         }
 
         isLoading = false;
     }
 
-    private void OnEventSelected(ChangeEventArgs e)
-    {
-        selectedEventId = int.TryParse(e.Value?.ToString(), out var id) ? id : null;
-    }
-
     private async Task SubmitRequestAsync()
     {
         errorMessage = null;
 
-        if (selectedEventId is null)
+        if (selectedSourceEventId == 0)
         {
-            errorMessage = "Please select an event.";
+            errorMessage = "Please select the current event.";
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(reason))
+        if (selectedTargetEventId == 0)
         {
-            errorMessage = "Please provide a reason for the reassignment.";
+            errorMessage = "Please select the requested event.";
             return;
         }
 
-        var success = await TeamService.SubmitReassignmentRequestAsync(
-            TeamId, selectedEventId.Value, reason);
+        var result = await TeamService.SubmitReassignmentRequestAsync(
+            TeamId, selectedSourceEventId, selectedTargetEventId, reason);
 
-        if (!success)
+        if (!result.Succeeded)
         {
-            errorMessage = "A pending request for this team and event already exists.";
+            errorMessage = result.Message;
             return;
         }
 

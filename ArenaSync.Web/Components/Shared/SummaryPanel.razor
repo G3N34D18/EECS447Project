@@ -1,0 +1,20 @@
+<div class="arena-card arena-summary-panel">
+    <div class="arena-summary-label">@Label</div>
+    <div class="arena-summary-value">@Value</div>
+    @if (!string.IsNullOrWhiteSpace(Detail))
+    {
+        <div class="arena-summary-detail">@Detail</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Href))
+    {
+        <a class="arena-summary-link" href="@Href">@LinkText</a>
+    }
+</div>
+
+@code {
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public string? Detail { get; set; }
+    [Parameter] public string? Href { get; set; }
+    [Parameter] public string LinkText { get; set; } = "View";
+}

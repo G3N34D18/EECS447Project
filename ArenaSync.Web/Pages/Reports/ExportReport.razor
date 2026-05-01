@@ -1,0 +1,162 @@
+@page "/reports/export"
+@rendermode RenderMode.InteractiveServer
+@inject IEventService EventService
+@inject ITeamService TeamService
+@inject IVenueService VenueService
+@inject IReportingService ReportingService
+
+<PageTitle>Export Reports</PageTitle>
+
+<div class="arena-page">
+    <ReportHeader Title="CSV Export"
+                  Subtitle="Generate CSV output for reporting workflows." />
+
+    <div class="arena-card arena-form-card">
+        <div class="arena-form-grid">
+            <div>
+                <label class="arena-label">Report Type</label>
+                <select class="arena-select" value="@selectedType" @onchange="OnTypeChanged">
+                    @foreach (var type in Enum.GetValues<ReportType>())
+                    {
+                        <option value="@type">@FormatReportType(type)</option>
+                    }
+                </select>
+            </div>
+
+            @if (RequiresEntity)
+            {
+                <div>
+                    <label class="arena-label">@EntityLabel</label>
+                    <select class="arena-select" value="@selectedEntityId" @onchange="OnEntityChanged">
+                        <option value="0">Choose @EntityLabel.ToLowerInvariant()</option>
+                        @foreach (var option in EntityOptions)
+                        {
+                            <option value="@option.Id">@option.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="arena-warning">@errorMessage</div>
+        }
+
+        <div class="arena-form-actions">
+            <button type="button" class="arena-primary-btn" @onclick="GenerateCsvAsync">Generate CSV</button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(csvContent))
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-form-section-title">CSV Output</div>
+            <textarea class="arena-textarea arena-csv-output" readonly>@csvContent</textarea>
+            <div class="arena-form-actions">
+                <a class="arena-outline-btn" download="@DownloadFileName" href="@DownloadHref">Download CSV</a>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "type")] public string? QueryType { get; set; }
+    [SupplyParameterFromQuery(Name = "entityId")] public int? QueryEntityId { get; set; }
+
+    private ReportType selectedType = ReportType.EventRoster;
+    private int selectedEntityId;
+    private string? csvContent;
+    private string? errorMessage;
+    private List<ReportEntityOption> events = new();
+    private List<ReportEntityOption> teams = new();
+    private List<ReportEntityOption> venues = new();
+
+    private bool RequiresEntity => selectedType != ReportType.ConflictSummary;
+    private string EntityLabel => selectedType switch
+    {
+        ReportType.EventRoster => "Event",
+        ReportType.TeamSchedule => "Team",
+        ReportType.VenueOccupancy => "Venue",
+        _ => "Entity"
+    };
+
+    private IEnumerable<ReportEntityOption> EntityOptions => selectedType switch
+    {
+        ReportType.EventRoster => events,
+        ReportType.TeamSchedule => teams,
+        ReportType.VenueOccupancy => venues,
+        _ => Array.Empty<ReportEntityOption>()
+    };
+
+    private string DownloadFileName => $"{selectedType}-{DateTime.Now:yyyyMMddHHmmss}.csv";
+    private string DownloadHref => $"data:text/csv;charset=utf-8,{Uri.EscapeDataString(csvContent ?? string.Empty)}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        events = (await EventService.GetAllEventsAsync())
+            .Select(e => new ReportEntityOption(e.Id, e.Name))
+            .ToList();
+        teams = (await TeamService.GetAllTeamsAsync())
+            .Select(t => new ReportEntityOption(t.Id, t.Name))
+            .ToList();
+        venues = (await VenueService.GetAllVenuesAsync())
+            .Select(v => new ReportEntityOption(v.Id, v.Name))
+            .ToList();
+
+        if (Enum.TryParse<ReportType>(QueryType, out var queryReportType))
+        {
+            selectedType = queryReportType;
+        }
+
+        selectedEntityId = QueryEntityId ?? EntityOptions.FirstOrDefault()?.Id ?? 0;
+    }
+
+    private void OnTypeChanged(ChangeEventArgs args)
+    {
+        if (Enum.TryParse<ReportType>(args.Value?.ToString(), out var reportType))
+        {
+            selectedType = reportType;
+            selectedEntityId = EntityOptions.FirstOrDefault()?.Id ?? 0;
+            csvContent = null;
+            errorMessage = null;
+        }
+    }
+
+    private void OnEntityChanged(ChangeEventArgs args)
+    {
+        selectedEntityId = int.TryParse(args.Value?.ToString(), out var id) ? id : 0;
+        csvContent = null;
+        errorMessage = null;
+    }
+
+    private async Task GenerateCsvAsync()
+    {
+        errorMessage = null;
+        csvContent = null;
+
+        if (RequiresEntity && selectedEntityId == 0)
+        {
+            errorMessage = $"Choose a {EntityLabel.ToLowerInvariant()} before exporting.";
+            return;
+        }
+
+        csvContent = await ReportingService.ExportReportToCsvAsync(
+            selectedType,
+            RequiresEntity ? selectedEntityId : null);
+    }
+
+    private static string FormatReportType(ReportType type)
+    {
+        return type switch
+        {
+            ReportType.EventRoster => "Event Roster",
+            ReportType.TeamSchedule => "Team Schedule",
+            ReportType.VenueOccupancy => "Venue Occupancy",
+            ReportType.ConflictSummary => "Conflict Summary",
+            _ => type.ToString()
+        };
+    }
+
+    private record ReportEntityOption(int Id, string Name);
+}

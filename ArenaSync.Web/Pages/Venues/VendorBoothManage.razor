@@ -91,9 +91,9 @@
                                 </td>
                                 <td>@booth.VendorAssignments.Count</td>
                                 <td>
-                                    <div class="arena-actions">
-                                        <button type="button" class="arena-outline-btn" @onclick="() => BeginEdit(booth)">Edit</button>
-                                        <button type="button" class="arena-link-danger" @onclick="() => DeleteAsync(booth.Id)">Delete</button>
+                                    <div class="arena-table-actions">
+                                        <button type="button" class="arena-table-action" @onclick="() => BeginEdit(booth)">Edit</button>
+                                        <button type="button" class="arena-table-action arena-table-action-danger" @onclick="() => DeleteAsync(booth.Id)">Delete</button>
                                     </div>
                                 </td>
                             </tr>

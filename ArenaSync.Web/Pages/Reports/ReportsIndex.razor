@@ -1,0 +1,33 @@
+@page "/reports"
+
+<PageTitle>Reports</PageTitle>
+
+<div class="arena-page">
+    <ReportHeader Title="Reports"
+                  Subtitle="Review event rosters, team schedules, venue occupancy, assignment conflicts, and CSV exports."
+                  BackHref="/"
+                  BackLabel="Back to Dashboard" />
+
+    <div class="arena-report-grid">
+        <a class="arena-card arena-report-card" href="/reports/events">
+            <div class="arena-report-card-title">Event Reports</div>
+            <p class="arena-report-card-text">Teams, attendees, vendors, lockers, and booths for a selected event.</p>
+        </a>
+        <a class="arena-card arena-report-card" href="/reports/teams">
+            <div class="arena-report-card-title">Team Reports</div>
+            <p class="arena-report-card-text">Team contact details, player count, event schedule, and locker assignments.</p>
+        </a>
+        <a class="arena-card arena-report-card" href="/reports/venues">
+            <div class="arena-report-card-title">Venue Reports</div>
+            <p class="arena-report-card-text">Venue capacity, resources, and per-event occupancy.</p>
+        </a>
+        <a class="arena-card arena-report-card" href="/reports/conflicts">
+            <div class="arena-report-card-title">Conflict Reports</div>
+            <p class="arena-report-card-text">Missing assignments and resource conflicts across events.</p>
+        </a>
+        <a class="arena-card arena-report-card" href="/reports/export">
+            <div class="arena-report-card-title">CSV Export</div>
+            <p class="arena-report-card-text">Generate CSV data for event, team, venue, or conflict reports.</p>
+        </a>
+    </div>
+</div>

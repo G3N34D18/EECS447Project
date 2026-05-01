@@ -1,0 +1,92 @@
+@page "/reports/teams"
+@rendermode RenderMode.InteractiveServer
+@inject ITeamService TeamService
+@inject IReportingService ReportingService
+
+<PageTitle>Team Report</PageTitle>
+
+<div class="arena-page">
+    <ReportHeader Title="Team Report"
+                  Subtitle="Team information, schedule, and assigned locker rooms."
+                  ExportHref="@(selectedTeamId == 0 ? null : $"/reports/export?type={ReportType.TeamSchedule}&entityId={selectedTeamId}")" />
+
+    <div class="arena-card arena-form-card">
+        <div class="arena-report-filter">
+            <div>
+                <label class="arena-label">Team</label>
+                <select class="arena-select" value="@selectedTeamId" @onchange="OnTeamChanged">
+                    <option value="0">Choose a team</option>
+                    @foreach (var team in teams)
+                    {
+                        <option value="@team.Id">@team.Name</option>
+                    }
+                </select>
+            </div>
+            <button type="button" class="arena-primary-btn" @onclick="LoadReportAsync" disabled="@(selectedTeamId == 0)">Refresh</button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-title">Loading team report...</div>
+            </div>
+        </div>
+    }
+    else if (report is not null)
+    {
+        <div class="arena-stat-grid">
+            <SummaryPanel Label="Manager" Value="@report.Manager" Detail="@report.Email" />
+            <SummaryPanel Label="Players" Value="@report.PlayerCount.ToString()" Detail="Roster size" />
+            <SummaryPanel Label="Events" Value="@report.Events.Count.ToString()" Detail="Current registrations" />
+        </div>
+
+        <div class="arena-card arena-table-card">
+            <div class="arena-form-section-title">Schedule</div>
+            <EntityTable TItem="TeamScheduleEventDto" Items="report.Events" Columns="scheduleColumns" EmptyTitle="No events" EmptyMessage="This team is not participating in any events." />
+        </div>
+    }
+</div>
+
+@code {
+    private List<Team> teams = new();
+    private TeamScheduleReportDto? report;
+    private int selectedTeamId;
+    private bool isLoading;
+
+    private readonly List<EntityTableColumn<TeamScheduleEventDto>> scheduleColumns =
+    [
+        new() { Header = "Event", Value = e => e.EventName },
+        new() { Header = "Venue", Value = e => e.VenueName },
+        new() { Header = "Start", Value = e => e.StartTime.ToString("MMM d, yyyy h:mm tt") },
+        new() { Header = "End", Value = e => e.EndTime.ToString("h:mm tt") },
+        new() { Header = "Locker", Value = e => e.LockerRoom }
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        teams = await TeamService.GetAllTeamsAsync();
+        selectedTeamId = teams.FirstOrDefault()?.Id ?? 0;
+        await LoadReportAsync();
+    }
+
+    private async Task OnTeamChanged(ChangeEventArgs args)
+    {
+        selectedTeamId = int.TryParse(args.Value?.ToString(), out var id) ? id : 0;
+        await LoadReportAsync();
+    }
+
+    private async Task LoadReportAsync()
+    {
+        if (selectedTeamId == 0)
+        {
+            report = null;
+            return;
+        }
+
+        isLoading = true;
+        report = await ReportingService.GetTeamScheduleAsync(selectedTeamId);
+        isLoading = false;
+    }
+}

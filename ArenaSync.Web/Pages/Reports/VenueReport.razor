@@ -1,0 +1,95 @@
+@page "/reports/venues"
+@rendermode RenderMode.InteractiveServer
+@inject IVenueService VenueService
+@inject IReportingService ReportingService
+
+<PageTitle>Venue Report</PageTitle>
+
+<div class="arena-page">
+    <ReportHeader Title="Venue Report"
+                  Subtitle="Venue capacity, resource inventory, and occupancy by event."
+                  ExportHref="@(selectedVenueId == 0 ? null : $"/reports/export?type={ReportType.VenueOccupancy}&entityId={selectedVenueId}")" />
+
+    <div class="arena-card arena-form-card">
+        <div class="arena-report-filter">
+            <div>
+                <label class="arena-label">Venue</label>
+                <select class="arena-select" value="@selectedVenueId" @onchange="OnVenueChanged">
+                    <option value="0">Choose a venue</option>
+                    @foreach (var venue in venues)
+                    {
+                        <option value="@venue.Id">@venue.Name</option>
+                    }
+                </select>
+            </div>
+            <button type="button" class="arena-primary-btn" @onclick="LoadReportAsync" disabled="@(selectedVenueId == 0)">Refresh</button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-title">Loading venue report...</div>
+            </div>
+        </div>
+    }
+    else if (report is not null)
+    {
+        <div class="arena-stat-grid">
+            <SummaryPanel Label="Capacity" Value="@($"{report.Capacity:N0}")" Detail="@report.Address" />
+            <SummaryPanel Label="Locker Rooms" Value="@report.TotalLockerRooms.ToString()" Detail="Team spaces" />
+            <SummaryPanel Label="Vendor Booths" Value="@report.TotalVendorBooths.ToString()" Detail="Vendor spaces" />
+            <SummaryPanel Label="Events" Value="@report.Events.Count.ToString()" Detail="Scheduled at this venue" />
+        </div>
+
+        <div class="arena-card arena-table-card">
+            <div class="arena-form-section-title">Event Occupancy</div>
+            <EntityTable TItem="VenueOccupancyEventDto" Items="report.Events" Columns="occupancyColumns" EmptyTitle="No events" EmptyMessage="This venue has no scheduled events." />
+        </div>
+    }
+</div>
+
+@code {
+    private List<Venue> venues = new();
+    private VenueOccupancyReportDto? report;
+    private int selectedVenueId;
+    private bool isLoading;
+
+    private readonly List<EntityTableColumn<VenueOccupancyEventDto>> occupancyColumns =
+    [
+        new() { Header = "Event", Value = e => e.EventName },
+        new() { Header = "Date", Value = e => e.StartTime.ToString("MMM d, yyyy") },
+        new() { Header = "Teams", Value = e => e.TeamCount.ToString() },
+        new() { Header = "Lockers", Value = e => e.AssignedLockers.ToString() },
+        new() { Header = "Vendors", Value = e => e.VendorCount.ToString() },
+        new() { Header = "Booths", Value = e => e.AssignedBooths.ToString() },
+        new() { Header = "Attendees", Value = e => e.AttendeeCount.ToString() }
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        venues = await VenueService.GetAllVenuesAsync();
+        selectedVenueId = venues.FirstOrDefault()?.Id ?? 0;
+        await LoadReportAsync();
+    }
+
+    private async Task OnVenueChanged(ChangeEventArgs args)
+    {
+        selectedVenueId = int.TryParse(args.Value?.ToString(), out var id) ? id : 0;
+        await LoadReportAsync();
+    }
+
+    private async Task LoadReportAsync()
+    {
+        if (selectedVenueId == 0)
+        {
+            report = null;
+            return;
+        }
+
+        isLoading = true;
+        report = await ReportingService.GetVenueOccupancyAsync(selectedVenueId);
+        isLoading = false;
+    }
+}

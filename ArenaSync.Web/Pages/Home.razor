@@ -1,7 +1,102 @@
-﻿@page "/"
+@page "/"
+@page "/dashboard"
+@rendermode RenderMode.InteractiveServer
+@inject IReportingService ReportingService
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Dashboard</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="arena-page">
+    <div class="arena-page-header">
+        <div>
+            <h1 class="arena-page-title">Dashboard</h1>
+            <p class="arena-page-subtitle">A live operations snapshot for events, participation, assignments, and conflicts.</p>
+        </div>
+        <div class="arena-actions">
+            <a class="arena-outline-btn" href="/reports">Reports</a>
+            <a class="arena-primary-btn" href="/admin/pending-requests">Pending Requests</a>
+        </div>
+    </div>
 
-Welcome to your new app.
+    @if (isLoading)
+    {
+        <div class="arena-card arena-form-card">
+            <div class="arena-empty-state">
+                <div class="arena-empty-logo"></div>
+                <div class="arena-empty-title">Loading dashboard...</div>
+            </div>
+        </div>
+    }
+    else if (summary is not null)
+    {
+        <div class="arena-stat-grid">
+            <SummaryPanel Label="Events" Value="@summary.TotalEvents.ToString()" Detail="@($"{summary.UpcomingEvents} upcoming")" Href="/reports/events" LinkText="Event report" />
+            <SummaryPanel Label="Teams" Value="@summary.TotalTeams.ToString()" Detail="Registered team records" Href="/reports/teams" LinkText="Team report" />
+            <SummaryPanel Label="Vendors" Value="@summary.TotalVendors.ToString()" Detail="Vendor directory records" Href="/reports/venues" LinkText="Venue report" />
+            <SummaryPanel Label="Attendees" Value="@summary.TotalAttendees.ToString()" Detail="Registered attendee records" Href="/reports/events" LinkText="Event rosters" />
+            <SummaryPanel Label="Pending Assignments" Value="@summary.PendingAssignments.ToString()" Detail="@($"{summary.PendingTeamAssignments} lockers, {summary.PendingVendorAssignments} booths")" Href="/reports/conflicts" LinkText="Resolve conflicts" />
+            <SummaryPanel Label="Pending Requests" Value="@summary.PendingTeamEventRequests.ToString()" Detail="Team event requests awaiting admin review" Href="/admin/pending-requests" LinkText="Review requests" />
+        </div>
+
+        <div class="arena-card arena-table-card">
+            <div class="arena-form-section-title">Upcoming Events</div>
+            <EntityTable TItem="DashboardEventDto"
+                         Items="summary.RecentEvents"
+                         Columns="eventColumns"
+                         EmptyTitle="No events"
+                         EmptyMessage="Create events to populate the dashboard."
+                         PageSize="5" />
+        </div>
+
+        <div class="arena-card arena-table-card">
+            <div class="arena-form-section-title">Critical Alerts</div>
+            @if (!summary.CriticalAlerts.Any())
+            {
+                <div class="arena-empty-state arena-empty-state-compact">
+                    <div class="arena-empty-title">No Critical Alerts</div>
+                    <p class="arena-empty-text">There are no critical assignment conflicts right now.</p>
+                </div>
+            }
+            else
+            {
+                <EntityTable TItem="ConflictReportRowDto"
+                             Items="summary.CriticalAlerts"
+                             Columns="conflictColumns"
+                             EmptyTitle="No alerts"
+                             EmptyMessage="There are no critical alerts."
+                             PageSize="5" />
+                <div class="arena-form-actions">
+                    <a class="arena-outline-btn" href="/reports/conflicts">View All Conflicts</a>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private DashboardSummaryDto? summary;
+    private bool isLoading = true;
+
+    private readonly List<EntityTableColumn<DashboardEventDto>> eventColumns =
+    [
+        new() { Header = "Event", Value = e => e.Name },
+        new() { Header = "Venue", Value = e => e.VenueName },
+        new() { Header = "Date", Value = e => e.StartTime.ToString("MMM d, yyyy") },
+        new() { Header = "Teams", Value = e => e.TeamCount.ToString() },
+        new() { Header = "Attendees", Value = e => e.AttendeeCount.ToString() },
+        new() { Header = "Vendors", Value = e => e.VendorCount.ToString() }
+    ];
+
+    private readonly List<EntityTableColumn<ConflictReportRowDto>> conflictColumns =
+    [
+        new() { Header = "Event", Value = c => c.EventName },
+        new() { Header = "Type", Value = c => c.Type },
+        new() { Header = "Affected", Value = c => c.AffectedEntity },
+        new() { Header = "Description", Value = c => c.Description }
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        summary = await ReportingService.GetDashboardSummaryAsync();
+        isLoading = false;
+    }
+}

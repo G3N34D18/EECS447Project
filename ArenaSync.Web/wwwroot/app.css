@@ -107,20 +107,77 @@ body {
     padding: 1rem 1.1rem;
 }
 
-.arena-stat-label {
+.arena-summary-panel {
+    padding: 1rem 1.1rem;
+}
+
+.arena-stat-label,
+.arena-summary-label {
     color: var(--arena-text-muted);
     font-size: .9rem;
 }
 
-.arena-stat-value {
+.arena-stat-value,
+.arena-summary-value {
     font-size: 1.8rem;
     font-weight: 800;
     color: var(--arena-text);
     margin-top: .3rem;
 }
 
+.arena-summary-detail {
+    color: var(--arena-text-muted);
+    font-size: .9rem;
+    margin-top: .25rem;
+}
+
+.arena-summary-link {
+    display: inline-flex;
+    margin-top: .75rem;
+    color: var(--arena-navy);
+    font-weight: 700;
+    text-decoration: none;
+}
+
 .arena-table-card {
     overflow: hidden;
+}
+
+.arena-page > .arena-card:not(.arena-conflict-panel) + .arena-card:not(.arena-conflict-panel),
+.arena-warning + .arena-card {
+    margin-top: 1.5rem;
+}
+
+.arena-table-card > .arena-form-section-title {
+    margin: 0;
+    padding: 1.25rem 1.5rem 1rem;
+}
+
+.arena-table-card > .arena-form-actions {
+    margin-top: 1rem;
+    padding: 0 1.5rem 1.25rem;
+}
+
+.arena-table-toolbar {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--arena-border);
+}
+
+.arena-table-search {
+    max-width: 320px;
+}
+
+.arena-column-sort {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: inherit;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    cursor: pointer;
 }
 
 .arena-table {
@@ -144,9 +201,13 @@ body {
         vertical-align: top;
     }
 
-    .arena-table tbody tr:last-child td {
-        border-bottom: 0;
-    }
+.arena-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.arena-table tbody tr.arena-selected-row td {
+    background: #fff8e8;
+}
 
 .arena-entity-title {
     font-weight: 700;
@@ -164,6 +225,54 @@ body {
     align-items: center;
     gap: .6rem;
     flex-wrap: nowrap;
+}
+
+.arena-table-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+}
+
+.arena-table-action {
+    min-height: 44px;
+    min-width: 72px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 .95rem;
+    border-radius: .8rem;
+    border: 1px solid var(--arena-border);
+    background: #fff;
+    color: var(--arena-text);
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.arena-table-action:hover {
+    color: var(--arena-text);
+}
+
+.arena-table-action-danger {
+    color: var(--arena-danger);
+    border-color: #f1b4b0;
+}
+
+.arena-table-action-danger:hover {
+    color: var(--arena-danger);
+}
+
+button.arena-table-action {
+    cursor: pointer;
+}
+
+button.arena-table-action:disabled {
+    color: var(--arena-text-muted);
+    border-color: var(--arena-border);
+    cursor: not-allowed;
+    opacity: .65;
 }
 
 .arena-link-danger {
@@ -206,6 +315,11 @@ button.arena-link-danger:disabled {
     font-weight: 800;
     margin: 1rem 0 .85rem;
     color: var(--arena-text);
+}
+
+.arena-form-card .arena-form-section-title:first-child,
+.arena-form-card form > .arena-form-section-title:first-child {
+    margin-top: 0;
 }
 
 .arena-label {
@@ -288,6 +402,69 @@ button.arena-link-danger:disabled {
     text-align: right;
 }
 
+.arena-request-detail {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.arena-request-detail-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--arena-border);
+}
+
+.arena-request-detail-header .arena-form-section-title {
+    margin-top: 0;
+}
+
+.arena-request-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.arena-request-detail-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .9rem 1rem;
+    border: 1px solid var(--arena-border);
+    border-radius: .95rem;
+    background: var(--arena-surface-alt);
+}
+
+.arena-request-detail-wide {
+    grid-column: 1 / -1;
+    display: block;
+}
+
+.arena-request-detail-wide .arena-info-label {
+    display: block;
+    margin-bottom: .5rem;
+}
+
+.arena-request-registration-list {
+    display: grid;
+    gap: .45rem;
+}
+
+.arena-request-registration-list div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.arena-request-reason {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    color: var(--arena-text);
+}
+
 .arena-badge {
     display: inline-flex;
     align-items: center;
@@ -337,6 +514,10 @@ button.arena-link-danger:disabled {
     padding: 3rem 1.5rem;
 }
 
+.arena-empty-state-compact {
+    padding: 2rem 1.5rem;
+}
+
 .arena-empty-logo {
     width: 180px;
     margin: 0 auto 1rem;
@@ -376,6 +557,61 @@ button.arena-link-danger:disabled {
 .arena-empty-text {
     color: var(--arena-text-muted);
     margin-bottom: 1.2rem;
+}
+
+.arena-report-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.arena-report-card {
+    padding: 1.25rem;
+    text-decoration: none;
+    color: var(--arena-text);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.arena-report-card:hover {
+    color: var(--arena-text);
+    transform: translateY(-1px);
+}
+
+.arena-report-card-title {
+    font-weight: 800;
+    margin-bottom: .4rem;
+}
+
+.arena-report-card-text {
+    color: var(--arena-text-muted);
+    margin: 0;
+}
+
+.arena-report-filter {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(220px, 360px) auto;
+    align-items: end;
+    margin-bottom: 1.5rem;
+}
+
+.arena-report-section {
+    margin-top: 1.5rem;
+}
+
+.arena-pagination {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: .75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--arena-border);
+}
+
+.arena-csv-output {
+    min-height: 240px;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: .9rem;
 }
 
 @keyframes arena-float {
@@ -420,6 +656,14 @@ button.arena-link-danger:disabled {
     }
 
     .arena-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .arena-request-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .arena-report-filter {
         grid-template-columns: 1fr;
     }
 

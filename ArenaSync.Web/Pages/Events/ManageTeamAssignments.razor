@@ -130,7 +130,7 @@
                                 <td>Room @assignment.LockerRoom.RoomNumber</td>
                                 <td>@assignment.LockerRoom.Venue?.Name</td>
                                 <td>
-                                    <button type="button" class="arena-link-danger" @onclick="() => RemoveAsync(assignment)">Remove</button>
+                                    <button type="button" class="arena-table-action arena-table-action-danger" @onclick="() => RemoveAsync(assignment)">Remove</button>
                                 </td>
                             </tr>
                         }

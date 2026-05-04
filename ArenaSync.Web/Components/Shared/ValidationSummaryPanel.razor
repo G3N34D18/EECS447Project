@@ -1,0 +1,58 @@
+@* -----------------------------------------------------------------------------
+   File: ValidationSummaryPanel.razor
+   Project: ArenaSync.Web
+   Purpose: Batch 4 — Reusable validation-error panel.
+            Displays both DataAnnotations errors (from EditContext) and
+            additional server-side / business-rule errors passed in via
+            the AdditionalErrors parameter.
+   ----------------------------------------------------------------------------- *@
+
+@using Microsoft.AspNetCore.Components.Forms
+
+@if (_hasErrors)
+{
+    <div class="validation-summary-panel alert alert-danger" role="alert" aria-live="polite">
+        <strong>Please correct the following errors:</strong>
+        <ul class="mb-0 mt-1">
+            @foreach (var message in _allErrors)
+            {
+                <li>@message</li>
+            }
+        </ul>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// The EditContext from the parent EditForm. When provided,
+    /// DataAnnotations validation errors are included automatically.
+    /// </summary>
+    [Parameter] public EditContext? CurrentEditContext { get; set; }
+
+    /// <summary>
+    /// Extra server-side or business-rule errors to show alongside
+    /// the model validation errors.
+    /// </summary>
+    [Parameter] public IReadOnlyList<string>? AdditionalErrors { get; set; }
+
+    private IEnumerable<string> _allErrors => BuildErrors();
+    private bool _hasErrors => _allErrors.Any();
+
+    private IEnumerable<string> BuildErrors()
+    {
+        var messages = new List<string>();
+
+        // DataAnnotations errors from EditContext
+        if (CurrentEditContext is not null)
+        {
+            foreach (var msg in CurrentEditContext.GetValidationMessages())
+                messages.Add(msg);
+        }
+
+        // Business-rule / server errors
+        if (AdditionalErrors is not null)
+            messages.AddRange(AdditionalErrors);
+
+        return messages;
+    }
+}

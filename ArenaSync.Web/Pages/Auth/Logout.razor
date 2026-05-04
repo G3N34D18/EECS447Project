@@ -1,0 +1,33 @@
+@page "/auth/logout"
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject NavigationManager NavigationManager
+@inject ILogger<Logout> Logger
+
+<PageTitle>Signing Out — ArenaSync</PageTitle>
+
+<div class="auth-page">
+    <div class="auth-card">
+        <h2>Signing you out…</h2>
+        <p class="text-muted">Please wait.</p>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await SignInManager.SignOutAsync();
+            Logger.LogInformation("User signed out.");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during sign-out.");
+        }
+        finally
+        {
+            NavigationManager.NavigateTo("/auth/login", forceLoad: true);
+        }
+    }
+}

@@ -105,6 +105,19 @@ namespace ArenaSync.Web.Services
                 return false;
             }
 
+            // Remove all child records that reference this event before deleting it
+            var participations = await _context.ParticipatesIn.Where(p => p.EventId == id).ToListAsync();
+            _context.ParticipatesIn.RemoveRange(participations);
+
+            var registrations = await _context.RegistersFor.Where(r => r.EventId == id).ToListAsync();
+            _context.RegistersFor.RemoveRange(registrations);
+
+            var teamAssignments = await _context.TeamAssignments.Where(a => a.EventId == id).ToListAsync();
+            _context.TeamAssignments.RemoveRange(teamAssignments);
+
+            var vendorAssignments = await _context.VendorAssignments.Where(a => a.EventId == id).ToListAsync();
+            _context.VendorAssignments.RemoveRange(vendorAssignments);
+
             _context.Events.Remove(eventEntity);
             await _context.SaveChangesAsync();
             return true;

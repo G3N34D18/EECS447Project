@@ -1,0 +1,134 @@
+@page "/auth/register"
+@using Microsoft.AspNetCore.Identity
+@using System.ComponentModel.DataAnnotations
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+@inject UserManager<IdentityUser> UserManager
+@inject NavigationManager NavigationManager
+@inject ILogger<Register> Logger
+
+<PageTitle>Register User — ArenaSync</PageTitle>
+
+<div class="page-header">
+    <h2>Register New User</h2>
+    <p class="text-muted">Create a new ArenaSync account. Admin only.</p>
+</div>
+
+@if (!string.IsNullOrEmpty(_successMessage))
+{
+    <div class="alert alert-success">@_successMessage</div>
+}
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger">@_errorMessage</div>
+}
+
+<div class="form-card">
+    <EditForm Model="@_model" OnValidSubmit="HandleRegister" FormName="register">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+
+        <div class="form-group">
+            <label for="email">Email</label>
+            <InputText id="email" class="form-control" @bind-Value="_model.Email" placeholder="user@example.com" />
+            <ValidationMessage For="@(() => _model.Email)" />
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <InputText id="password" type="password" class="form-control" @bind-Value="_model.Password" />
+            <ValidationMessage For="@(() => _model.Password)" />
+        </div>
+
+        <div class="form-group">
+            <label for="confirmPassword">Confirm Password</label>
+            <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="_model.ConfirmPassword" />
+            <ValidationMessage For="@(() => _model.ConfirmPassword)" />
+        </div>
+
+        <div class="form-group">
+            <label for="role">Role</label>
+            <InputSelect id="role" class="form-select" @bind-Value="_model.Role">
+                <option value="Viewer">Viewer</option>
+                <option value="Manager">Manager</option>
+                <option value="Admin">Admin</option>
+            </InputSelect>
+            <ValidationMessage For="@(() => _model.Role)" />
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary" disabled="@_isLoading">
+                @(_isLoading ? "Creating…" : "Create Account")
+            </button>
+            <a href="/" class="btn btn-secondary">Cancel</a>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private RegisterModel _model = new();
+    private string? _errorMessage;
+    private string? _successMessage;
+    private bool _isLoading;
+
+    [Inject] private Microsoft.AspNetCore.Identity.RoleManager<IdentityRole> RoleManager { get; set; } = default!;
+
+    private async Task HandleRegister()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+        _successMessage = null;
+
+        try
+        {
+            var user = new IdentityUser { UserName = _model.Email, Email = _model.Email, EmailConfirmed = true };
+            var result = await UserManager.CreateAsync(user, _model.Password);
+
+            if (result.Succeeded)
+            {
+                // Ensure the role exists before assigning
+                if (!await RoleManager.RoleExistsAsync(_model.Role))
+                    await RoleManager.CreateAsync(new IdentityRole(_model.Role));
+
+                await UserManager.AddToRoleAsync(user, _model.Role);
+
+                Logger.LogInformation("Admin created new user {Email} with role {Role}.", _model.Email, _model.Role);
+                _successMessage = $"Account created for {_model.Email} ({_model.Role}).";
+                _model = new RegisterModel();
+            }
+            else
+            {
+                _errorMessage = string.Join("; ", result.Errors.Select(e => e.Description));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error creating user {Email}", _model.Email);
+            _errorMessage = "An unexpected error occurred. Please try again.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private sealed class RegisterModel
+    {
+        [Required(ErrorMessage = "Email is required.")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Password is required.")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters.")]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Please confirm your password.")]
+        [DataType(DataType.Password)]
+        [Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Please select a role.")]
+        public string Role { get; set; } = "Viewer";
+    }
+}

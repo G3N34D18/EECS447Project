@@ -1,0 +1,114 @@
+@page "/auth/login"
+@using Microsoft.AspNetCore.Identity
+@using System.ComponentModel.DataAnnotations
+@inject SignInManager<IdentityUser> SignInManager
+@inject NavigationManager NavigationManager
+@inject ILogger<Login> Logger
+
+<PageTitle>Login — ArenaSync</PageTitle>
+
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo-mark"></div>
+            <h1>ArenaSync</h1>
+            <p>Your all-in-one arena &amp; event management platform</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <div class="alert alert-danger">@_errorMessage</div>
+        }
+
+        <EditForm Model="@_model" OnValidSubmit="HandleLogin" FormName="login">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <InputText id="email" class="form-control" @bind-Value="_model.Email"
+                           placeholder="you@example.com" autocomplete="username" />
+                <ValidationMessage For="@(() => _model.Email)" />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <InputText id="password" type="password" class="form-control"
+                           @bind-Value="_model.Password" autocomplete="current-password" />
+                <ValidationMessage For="@(() => _model.Password)" />
+            </div>
+
+            <div class="form-group form-check">
+                <InputCheckbox id="rememberMe" class="form-check-input" @bind-Value="_model.RememberMe" />
+                <label class="form-check-label" for="rememberMe">Remember me</label>
+            </div>
+
+            <button type="submit" class="auth-submit-btn" disabled="@_isLoading">
+                @(_isLoading ? "Signing in…" : "Sign in")
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private LoginModel _model { get; set; } = new();
+    private string? _errorMessage;
+    private bool _isLoading;
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private async Task HandleLogin()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            var result = await SignInManager.PasswordSignInAsync(
+                _model.Email,
+                _model.Password,
+                _model.RememberMe,
+                lockoutOnFailure: true);
+
+            if (result.Succeeded)
+            {
+                Logger.LogInformation("User {Email} logged in.", _model.Email);
+                var redirectUrl = !string.IsNullOrEmpty(ReturnUrl) ? ReturnUrl : "/";
+                NavigationManager.NavigateTo(redirectUrl, forceLoad: true);
+            }
+            else if (result.IsLockedOut)
+            {
+                Logger.LogWarning("User account locked out: {Email}", _model.Email);
+                _errorMessage = "Your account has been locked due to too many failed attempts. Please try again later.";
+            }
+            else
+            {
+                _errorMessage = "Invalid email or password. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during login for {Email}", _model.Email);
+            _errorMessage = "An unexpected error occurred. Please try again.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private sealed class LoginModel
+    {
+        [Required(ErrorMessage = "Email is required.")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Password is required.")]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = string.Empty;
+
+        public bool RememberMe { get; set; }
+    }
+}

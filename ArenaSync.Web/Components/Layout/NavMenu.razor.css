@@ -19,8 +19,8 @@
 }
 
 .arena-brand-logo {
-    width: 75px;
-    height: 75px;
+    width: 96px;
+    height: 96px;
     object-fit: contain;
     flex-shrink: 0;
 }
@@ -36,7 +36,7 @@
 
 .arena-brand-title {
     color: #f5d48a;
-    font-size: 1.18rem;
+    font-size: 1.45rem;
     font-weight: 800;
     letter-spacing: -.02em;
     white-space: nowrap;
@@ -44,7 +44,7 @@
 
 .arena-brand-subtitle {
     color: rgba(255,255,255,.78);
-    font-size: .82rem;
+    font-size: .95rem;
     font-weight: 500;
     margin-top: .15rem;
     white-space: nowrap;
@@ -78,11 +78,13 @@
 .arena-nav-link {
     display: flex;
     align-items: center;
-    gap: .8rem;
+    gap: .85rem;
     color: #f8fafc;
     text-decoration: none;
     padding: .9rem 1rem;
     border-radius: .9rem;
+    font-size: 1rem;
+    font-weight: 500;
     transition: background-color .2s ease, color .2s ease, box-shadow .2s ease;
 }
 
@@ -98,8 +100,10 @@
     }
 
 .arena-nav-icon {
-    width: 1.15rem;
+    font-size: 1.2rem;
+    width: 1.4rem;
     text-align: center;
+    flex-shrink: 0;
 }
 
 .arena-sidebar-footer {
@@ -107,9 +111,4 @@
     display: flex;
     flex-direction: column;
     gap: .35rem;
-    padding-top: 1rem;
-}
-
-.arena-nav-link-muted {
-    color: rgba(255,255,255,.75);
-}
+  

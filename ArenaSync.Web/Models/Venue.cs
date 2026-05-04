@@ -1,13 +1,14 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ArenaSync.Web.Models
 {
     public class Venue
     {
         public int Id { get; set; }
+
+        [Required(ErrorMessage = "Venue name is required.")]
+        [StringLength(200, ErrorMessage = "Name cannot exceed 200 characters.")]
         public string Name { get; set; } = string.Empty;
-        public string Address { get; set; } = string.Empty;
-        public int Capacity { get; set; }
-        public List<LockerRoom> LockerRooms { get; set; } = new();
-        public List<VendorBooth> VendorBooths { get; set; } = new();
-        public List<Event> Events { get; set; } = new();
-    }
-}
+
+        [Required(ErrorMessage = "Address is required.")]
+        [StringLength(500, ErrorMessage = "Address cann

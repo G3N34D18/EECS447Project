@@ -105,9 +105,5 @@ namespace ArenaSync.Web.Services
                 return false;
             }
 
-            _context.Events.Remove(eventEntity);
-            await _context.SaveChangesAsync();
-            return true;
-        }
-    }
-}
+            // Remove all child records that reference this event before deleting it
+            var participations = await _context.Participa

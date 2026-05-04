@@ -400,6 +400,204 @@ namespace ArenaSync.Web.Migrations
                     b.ToTable("Venues", (string)null);
                 });
 
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex")
+                        .HasFilter("[NormalizedName] IS NOT NULL");
+
+                    b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex")
+                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", (string)null);
+                });
+
             modelBuilder.Entity("ArenaSync.Web.Models.Event", b =>
                 {
                     b.HasOne("ArenaSync.Web.Models.Venue", "Venue")
@@ -443,202 +641,4 @@ namespace ArenaSync.Web.Migrations
 
             modelBuilder.Entity("ArenaSync.Web.Models.RegistersFor", b =>
                 {
-                    b.HasOne("ArenaSync.Web.Models.Attendee", "Attendee")
-                        .WithMany("Registrations")
-                        .HasForeignKey("AttendeeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ArenaSync.Web.Models.Event", "Event")
-                        .WithMany("Registrations")
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Attendee");
-
-                    b.Navigation("Event");
-                });
-
-            modelBuilder.Entity("ArenaSync.Web.Models.SuppliesAt", b =>
-                {
-                    b.HasOne("ArenaSync.Web.Models.Event", "Event")
-                        .WithMany("Suppliers")
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ArenaSync.Web.Models.Vendor", "Vendor")
-                        .WithMany("SuppliesAt")
-                        .HasForeignKey("VendorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Event");
-
-                    b.Navigation("Vendor");
-                });
-
-            modelBuilder.Entity("ArenaSync.Web.Models.TeamAssignment", b =>
-                {
-                    b.HasOne("ArenaSync.Web.Models.Event", "Event")
-                        .WithMany("Assignments")
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ArenaSync.Web.Models.LockerRoom", "LockerRoom")
-                        .WithMany("Assignments")
-                        .HasForeignKey("LockerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ArenaSync.Web.Models.Team", "Team")
-                        .WithMany("Assignments")
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Event");
-
-                    b.Navigation("LockerRoom");
-
-                    b.Navigation("Team");
-                });
-
-            modelBuilder.Entity("ArenaSync.Web.Models.TeamEventRequest", b =>
-                {
-                    b.HasOne("ArenaSync.Web.Models.Event", "SourceEvent")
-                        .WithMany()
-                        .HasForeignKey("SourceEventId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("ArenaSync.Web.Models.Event", "TargetEvent")
-                        .WithMany()
-                        .HasForeignKey("TargetEventId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("ArenaSync.Web.Models.Team", "Team")
-                        .WithMany()
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("SourceEvent");
-
-                    b.Navigation("TargetEvent");
-
-                    b.Navigation("Team");
-                });
-
-            modelBuilder.Entity("ArenaSync.Web.Models.TeamReassignmentRequest", b =>
-                {
-                    b.HasOne("ArenaSync.Web.Models.Event", "RequestedEvent")
-                        .WithMany()
-                        .HasForeignKey("RequestedEventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ArenaSync.Web.Models.Team", "Team")
-                        .WithMany()
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("RequestedEvent");
-
-                    b.Navigation("Team");
-                });
-
-            modelBuilder.Entity("ArenaSync.Web.Models.VendorAssignment", b =>
-                {
-                    b.HasOne("ArenaSync.Web.Models.VendorBooth", "Booth")
-                        .WithMany("VendorAssignments")
-                        .HasForeignKey("BoothId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ArenaSync.Web.Models.Event", "Event")
-                        .WithMany("VendorAssignments")
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ArenaSync.Web.Models.Vendor", "Vendor")
-                        .WithMany("VendorAssignments")
-                        .HasForeignKey("VendorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Booth");
-
-                    b.Navigation("Event");
-
-                    b.Navigation("Vendor");
-                });
-
-            modelBuilder.Entity("ArenaSync.Web.Models.VendorBooth", b =>
-                {
-                    b.HasOne("ArenaSync.Web.Models.Venue", "Venue")
-                        .WithMany("VendorBooths")
-                        .HasForeignKey("VenueId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Venue");
-                });
-
-            modelBuilder.Entity("ArenaSync.Web.Models.Attendee", b =>
-                {
-                    b.Navigation("Registrations");
-                });
-
-            modelBuilder.Entity("ArenaSync.Web.Models.Event", b =>
-                {
-                    b.Navigation("Assignments");
-
-                    b.Navigation("Participants");
-
-                    b.Navigation("Registrations");
-
-                    b.Navigation("Suppliers");
-
-                    b.Navigation("VendorAssignments");
-                });
-
-            modelBuilder.Entity("ArenaSync.Web.Models.LockerRoom", b =>
-                {
-                    b.Navigation("Assignments");
-                });
-
-            modelBuilder.Entity("ArenaSync.Web.Models.Team", b =>
-                {
-                    b.Navigation("Assignments");
-
-                    b.Navigation("ParticipatesIn");
-                });
-
-            modelBuilder.Entity("ArenaSync.Web.Models.Vendor", b =>
-                {
-                    b.Navigation("SuppliesAt");
-
-                    b.Navigation("VendorAssignments");
-                });
-
-            modelBuilder.Entity("ArenaSync.Web.Models.VendorBooth", b =>
-                {
-                    b.Navigation("VendorAssignments");
-                });
-
-            modelBuilder.Entity("ArenaSync.Web.Models.Venue", b =>
-                {
-                    b.Navigation("Events");
-
-                    b.Navigation("LockerRooms");
-
-                    b.Navigation("VendorBooths");
-                });
-#pragma warning restore 612, 618
-        }
-    }
-}
+                    b.Ha

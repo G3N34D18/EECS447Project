@@ -1,1 +1,3 @@
-This repo is for the 447 final project.
+# ArenaSync
+
+**ArenaSync** is a web-based

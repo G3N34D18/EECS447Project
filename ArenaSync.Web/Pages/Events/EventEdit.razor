@@ -77,10 +77,10 @@
                                 }
                             </InputSelect>
 
-                            <select @bind="form.StartMeridiem" class="arena-select">
+                            <InputSelect @bind-Value="form.StartMeridiem" class="arena-select">
                                 <option value="AM">AM</option>
                                 <option value="PM">PM</option>
-                            </select>
+                            </InputSelect>
                         </div>
                     </div>
 
@@ -106,10 +106,10 @@
                                 }
                             </InputSelect>
 
-                           <select @bind="form.EndMeridiem" class="arena-select">
+                           <InputSelect @bind-Value="form.EndMeridiem" class="arena-select">
                                 <option value="AM">AM</option>
                                 <option value="PM">PM</option>
-                            </select>
+                            </InputSelect>
                         </div>
                     </div>
                 </div>
@@ -227,7 +227,4 @@
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message;
-        }
-    }
-}
+            errorMessage = e

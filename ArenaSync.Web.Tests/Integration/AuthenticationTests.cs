@@ -8,10 +8,14 @@
 // -----------------------------------------------------------------------------
 
 using ArenaSync.Web.Data;
+using ArenaSync.Web.Pages.Auth;
 using ArenaSync.Web.Tests.TestSupport;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
 using Xunit;
 
 namespace ArenaSync.Web.Tests.Integration;
@@ -181,5 +185,27 @@ public class AuthenticationTests : IDisposable
         var um    = GetUserManager();
         var found = await um.FindByEmailAsync("ghost@test.com");
         Assert.Null(found);
+    }
+
+    [Fact]
+    public void RegisterPage_RequiresAdminRole()
+    {
+        var authorizeAttribute = typeof(Register)
+            .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: false)
+            .Cast<AuthorizeAttribute>()
+            .SingleOrDefault();
+
+        Assert.NotNull(authorizeAttribute);
+        Assert.Equal("Admin", authorizeAttribute.Roles);
+    }
+
+    [Fact]
+    public void RegisterPage_ModelBindsFromPostedForm()
+    {
+        var modelProperty = typeof(Register)
+            .GetProperty("_model", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(modelProperty);
+        Assert.NotNull(modelProperty.GetCustomAttribute<SupplyParameterFromFormAttribute>());
     }
 }

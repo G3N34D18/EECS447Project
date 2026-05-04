@@ -66,7 +66,8 @@
 </div>
 
 @code {
-    private RegisterModel _model = new();
+    [SupplyParameterFromForm]
+    private RegisterModel _model { get; set; } = new();
     private string? _errorMessage;
     private string? _successMessage;
     private bool _isLoading;

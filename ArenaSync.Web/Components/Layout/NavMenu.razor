@@ -47,6 +47,15 @@
             <span>Requests</span>
         </NavLink>
 
+        <AuthorizeView Roles="Admin">
+            <Authorized>
+                <NavLink class="arena-nav-link" href="/auth/register">
+                    <i class="bi bi-person-plus-fill arena-nav-icon"></i>
+                    <span>Users</span>
+                </NavLink>
+            </Authorized>
+        </AuthorizeView>
+
         <NavLink class="arena-nav-link" href="/attendees">
             <i class="bi bi-person-lines-fill arena-nav-icon"></i>
             <span>Attendees</span>

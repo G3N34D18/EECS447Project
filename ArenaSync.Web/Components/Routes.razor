@@ -1,6 +1,18 @@
 ﻿<Router AppAssembly="@typeof(Program).Assembly" NotFoundPage="@typeof(Pages.NotFound)">
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
+        <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)">
+            <NotAuthorized>
+                <LayoutView Layout="@typeof(Layout.MainLayout)">
+                    <div class="arena-page">
+                        <div class="arena-card arena-delete-card">
+                            <div class="arena-empty-title">Access denied</div>
+                            <p class="arena-empty-text">You do not have permission to view this page.</p>
+                            <a class="arena-primary-btn" href="/auth/login">Sign in</a>
+                        </div>
+                    </div>
+                </LayoutView>
+            </NotAuthorized>
+        </AuthorizeRouteView>
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
 </Router>

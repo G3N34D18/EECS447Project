@@ -73,7 +73,7 @@
         var deleted = await AttendeeService.DeleteAttendeeAsync(Id);
         if (!deleted)
         {
-            errorMessage = "Attendee could not be found.";
+            errorMessage = "Attendee could not be deleted. Remove event registrations first.";
             return;
         }
 

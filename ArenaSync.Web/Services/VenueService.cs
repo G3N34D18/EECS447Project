@@ -45,6 +45,17 @@ namespace ArenaSync.Web.Services
         {
             var venue = await _context.Venues.FindAsync(id);
             if (venue == null) return false;
+
+            var hasDependencies =
+                await _context.Events.AnyAsync(e => e.VenueId == id)
+                || await _context.LockerRooms.AnyAsync(lr => lr.VenueId == id)
+                || await _context.VendorBooths.AnyAsync(vb => vb.VenueId == id);
+
+            if (hasDependencies)
+            {
+                return false;
+            }
+
             _context.Venues.Remove(venue);
             await _context.SaveChangesAsync();
             return true;

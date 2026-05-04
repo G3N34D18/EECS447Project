@@ -118,6 +118,19 @@ namespace ArenaSync.Web.Services
             var vendorAssignments = await _context.VendorAssignments.Where(a => a.EventId == id).ToListAsync();
             _context.VendorAssignments.RemoveRange(vendorAssignments);
 
+            var suppliers = await _context.SuppliesAt.Where(s => s.EventId == id).ToListAsync();
+            _context.SuppliesAt.RemoveRange(suppliers);
+
+            var teamEventRequests = await _context.TeamEventRequests
+                .Where(r => r.SourceEventId == id || r.TargetEventId == id)
+                .ToListAsync();
+            _context.TeamEventRequests.RemoveRange(teamEventRequests);
+
+            var teamReassignmentRequests = await _context.TeamReassignmentRequests
+                .Where(r => r.RequestedEventId == id)
+                .ToListAsync();
+            _context.TeamReassignmentRequests.RemoveRange(teamReassignmentRequests);
+
             _context.Events.Remove(eventEntity);
             await _context.SaveChangesAsync();
             return true;

@@ -73,6 +73,15 @@ namespace ArenaSync.Web.Services
             if (team == null)
                 return false;
 
+            var hasDependencies =
+                await _context.ParticipatesIn.AnyAsync(p => p.TeamId == id)
+                || await _context.TeamAssignments.AnyAsync(a => a.TeamId == id)
+                || await _context.TeamEventRequests.AnyAsync(r => r.TeamId == id)
+                || await _context.TeamReassignmentRequests.AnyAsync(r => r.TeamId == id);
+
+            if (hasDependencies)
+                return false;
+
             _context.Teams.Remove(team);
             await _context.SaveChangesAsync();
             return true;

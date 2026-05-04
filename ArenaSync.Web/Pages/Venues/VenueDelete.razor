@@ -76,7 +76,7 @@
             var deleted = await VenueService.DeleteVenueAsync(Id);
             if (!deleted)
             {
-                errorMessage = "Venue could not be found.";
+                errorMessage = "Venue could not be deleted. Remove related events, locker rooms, and booths first.";
                 return;
             }
 

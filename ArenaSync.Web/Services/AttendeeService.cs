@@ -74,6 +74,10 @@ namespace ArenaSync.Web.Services
             if (attendee == null)
                 return false;
 
+            var hasRegistrations = await _context.RegistersFor.AnyAsync(r => r.AttendeeId == id);
+            if (hasRegistrations)
+                return false;
+
             _context.Attendees.Remove(attendee);
             await _context.SaveChangesAsync();
             return true;

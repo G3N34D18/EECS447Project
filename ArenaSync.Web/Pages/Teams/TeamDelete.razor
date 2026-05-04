@@ -75,7 +75,7 @@
         var deleted = await TeamService.DeleteTeamAsync(Id);
         if (!deleted)
         {
-            errorMessage = "team could not be found.";
+            errorMessage = "Team could not be deleted. Remove event registrations, assignments, and pending requests first.";
             return;
         }
 

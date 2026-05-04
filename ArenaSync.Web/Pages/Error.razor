@@ -38,4 +38,20 @@
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
 
-    private string? RequestId { get; s
+    private string? RequestId { get; set; }
+    private bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+    private string? _exceptionMessage;
+
+    protected override void OnInitialized()
+    {
+        RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+
+        // Log and capture the exception for dev display
+        var exceptionFeature = HttpContext?.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        if (exceptionFeature?.Error is { } ex)
+        {
+            Logger.LogError(ex, "Error page rendered for request {RequestId}", RequestId);
+            _exceptionMessage = Env.IsDevelopment() ? ex.ToString() : null;
+        }
+    }
+}

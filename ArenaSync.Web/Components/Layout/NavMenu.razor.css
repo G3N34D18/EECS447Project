@@ -111,4 +111,9 @@
     display: flex;
     flex-direction: column;
     gap: .35rem;
-  
+    padding-top: 1rem;
+}
+
+.arena-nav-link-muted {
+    color: rgba(255,255,255,.75);
+}

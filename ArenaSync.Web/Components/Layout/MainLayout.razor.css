@@ -151,4 +151,67 @@ article {
         content: "";
         position: absolute;
         inset: 0;
- 
+        border-radius: inherit;
+        pointer-events: none;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
+    }
+
+@media (max-width: 640.98px) {
+    .top-row {
+        justify-content: space-between;
+        padding: 0 1rem;
+        height: 3.9rem;
+    }
+
+    .content-shell {
+        padding: 1rem;
+    }
+}
+
+@media (min-width: 641px) {
+    .page {
+        flex-direction: row;
+    }
+
+    .sidebar {
+        width: 290px;
+        min-width: 290px;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+    }
+
+    main {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+@media (min-width: 1200px) {
+    .content-shell {
+        padding: 1.75rem 2rem;
+    }
+}
+
+#blazor-error-ui {
+    color-scheme: light only;
+    background: #fff8e8;
+    color: #7a5a17;
+    border-top: 1px solid #f0ddb0;
+    bottom: 0;
+    box-shadow: 0 -6px 20px rgba(15, 23, 42, 0.08);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.85rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 0.9rem;
+        top: 0.7rem;
+    }

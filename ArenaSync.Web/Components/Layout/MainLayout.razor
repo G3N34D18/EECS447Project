@@ -18,4 +18,28 @@
                 <AuthorizeView>
                     <Authorized>
                         <span class="user-info">
-                   
+                            <span class="user-icon">&#128100;</span>
+                            <span class="username">@context.User.Identity?.Name</span>
+                        </span>
+                        <a href="/auth/logout" class="top-row-btn top-row-btn-outline">Sign out</a>
+                    </Authorized>
+                    <NotAuthorized>
+                        <a href="/auth/login" class="top-row-btn top-row-btn-primary">Sign in</a>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </div>
+        </div>
+
+        <section class="content-shell">
+            <article class="content-panel">
+                @Body
+            </article>
+        </section>
+    </main>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>

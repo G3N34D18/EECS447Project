@@ -720,3 +720,373 @@ button.arena-link-danger:disabled {
     border: 1px solid transparent;
     color: var(--arena-danger);
 }
+
+/* ─── Batch 6: UI Polish ───────────────────────────────────────────────────── */
+
+/* Smooth focus rings on all interactive inputs */
+.arena-input:focus,
+.arena-textarea:focus,
+.arena-select:focus {
+    outline: none;
+    border-color: var(--arena-navy);
+    box-shadow: 0 0 0 3px rgba(13, 39, 95, .12);
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+/* Hover lift on action buttons */
+.arena-table-action:hover {
+    background: var(--arena-surface-alt);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .07);
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.arena-table-action-danger:hover {
+    background: #fff3f2;
+}
+
+/* Hover lift on report cards */
+.arena-report-card:hover {
+    box-shadow: 0 18px 40px rgba(15, 23, 42, .1);
+}
+
+/* Subtle row highlight on table hover */
+.arena-table tbody tr:hover td {
+    background: var(--arena-surface-alt);
+    transition: background .1s ease;
+}
+
+/* Stat card accent bar */
+.arena-stat-card {
+    border-top: 3px solid var(--arena-gold);
+}
+
+/* Danger button hover */
+.arena-danger-btn:hover {
+    background: #c43b31;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(220, 79, 69, .25);
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+/* Secondary button hover */
+.arena-secondary-btn:hover,
+.arena-outline-btn:hover {
+    background: var(--arena-surface-alt);
+    border-color: #d1d5db;
+    color: var(--arena-text);
+    transform: translateY(-1px);
+    transition: transform .15s ease, background .15s ease;
+}
+
+/* Breadcrumb separator styling */
+.arena-breadcrumb {
+    letter-spacing: .01em;
+}
+
+/* Badge color variants */
+.arena-badge-success {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #065f46;
+}
+
+.arena-badge-warning {
+    background: #fff8e8;
+    border-color: #f0ddb0;
+    color: #7a5a17;
+}
+
+.arena-badge-danger {
+    background: #fff3f2;
+    border-color: #f1b4b0;
+    color: #9b1c1c;
+}
+
+/* Mobile: stack page header actions below title */
+@media (max-width: 600px) {
+    .arena-page {
+        padding: 1rem;
+    }
+
+    .arena-page-title {
+        font-size: 1.5rem;
+    }
+
+    .arena-form-card {
+        padding: 1rem;
+    }
+
+    .arena-table thead th,
+    .arena-table tbody td {
+        padding: .75rem .9rem;
+    }
+
+    .arena-actions {
+        flex-wrap: wrap;
+    }
+
+    .arena-form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .arena-form-actions .arena-primary-btn,
+    .arena-form-actions .arena-secondary-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Auth page polish */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--arena-navy-deep) 0%, var(--arena-navy) 100%);
+    padding: 1.5rem;
+}
+
+.auth-card {
+    background: #fff;
+    border-radius: 1.5rem;
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 24px 60px rgba(7, 26, 67, .35);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-logo-mark {
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 1.1rem;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 35%, #f3dfb4, var(--arena-gold) 70%, #9d7227 100%);
+    box-shadow: 0 12px 32px rgba(198, 152, 72, .35);
+    position: relative;
+    animation: arena-float 3.2s ease-in-out infinite;
+}
+
+.auth-logo-mark::before,
+.auth-logo-mark::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid rgba(13, 39, 95, .18);
+}
+
+.auth-logo-mark::before {
+    inset: 18%;
+    animation: arena-rotate 10s linear infinite;
+}
+
+.auth-logo-mark::after {
+    inset: 6%;
+    border-color: rgba(13, 39, 95, .1);
+    animation: arena-rotate-reverse 14s linear infinite;
+}
+
+.auth-header h1 {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--arena-navy);
+    margin: 0 0 .4rem;
+    letter-spacing: -.025em;
+}
+
+.auth-header p {
+    color: var(--arena-text-muted);
+    font-size: .95rem;
+    margin: 0;
+}
+
+.auth-page .form-group {
+    margin-bottom: 1.1rem;
+}
+
+.auth-page label {
+    display: block;
+    font-weight: 700;
+    color: var(--arena-text);
+    margin-bottom: .4rem;
+    font-size: .95rem;
+}
+
+.auth-page .form-control {
+    width: 100%;
+    border: 1px solid var(--arena-border);
+    border-radius: .85rem;
+    padding: .8rem 1rem;
+    color: var(--arena-text);
+    font-size: 1rem;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.auth-page .form-control:focus {
+    outline: none;
+    border-color: var(--arena-navy);
+    box-shadow: 0 0 0 3px rgba(13, 39, 95, .12);
+}
+
+.auth-page .btn-primary {
+    width: 100%;
+    margin-top: .5rem;
+    background: var(--arena-navy);
+    border: none;
+    border-radius: .85rem;
+    padding: .9rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+
+.auth-page .btn-primary:hover:not(:disabled) {
+    background: var(--arena-navy-deep);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(13, 39, 95, .25);
+}
+
+.auth-page .btn-primary:disabled {
+    opacity: .7;
+    cursor: not-allowed;
+}
+
+.auth-submit-btn {
+    display: block;
+    width: 100%;
+    margin-top: .75rem;
+    padding: .95rem;
+    background: var(--arena-navy);
+    border: none;
+    border-radius: .85rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff !important;
+    cursor: pointer;
+    letter-spacing: .01em;
+    transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+
+.auth-submit-btn:hover:not(:disabled) {
+    background: var(--arena-navy-deep);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(13, 39, 95, .28);
+}
+
+.auth-submit-btn:disabled {
+    opacity: .65;
+    cursor: not-allowed;
+}
+
+/* ─── Home page hero ─────────────────────────────────────────────────────── */
+
+.arena-hero {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    background: linear-gradient(120deg, var(--arena-navy-deep) 0%, var(--arena-navy) 100%);
+    border-radius: 1.4rem;
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.75rem;
+    box-shadow: 0 16px 40px rgba(7, 26, 67, .22);
+    flex-wrap: wrap;
+}
+
+.arena-hero-logo {
+    width: 72px;
+    height: 72px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 35%, #f3dfb4, var(--arena-gold) 70%, #9d7227 100%);
+    box-shadow: 0 8px 24px rgba(198, 152, 72, .4);
+    position: relative;
+    animation: arena-float 3.2s ease-in-out infinite;
+}
+
+.arena-hero-logo::before,
+.arena-hero-logo::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, .2);
+}
+
+.arena-hero-logo::before {
+    inset: 18%;
+    animation: arena-rotate 10s linear infinite;
+}
+
+.arena-hero-logo::after {
+    inset: 6%;
+    border-color: rgba(255, 255, 255, .1);
+    animation: arena-rotate-reverse 14s linear infinite;
+}
+
+.arena-hero-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.arena-hero-title {
+    font-size: 1.9rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0 0 .2rem;
+    letter-spacing: -.02em;
+}
+
+.arena-hero-subtitle {
+    color: rgba(255, 255, 255, .7);
+    margin: 0;
+    font-size: .97rem;
+}
+
+.arena-hero .arena-actions {
+    flex-shrink: 0;
+}
+
+.arena-hero .arena-primary-btn {
+    background: var(--arena-gold);
+    color: var(--arena-navy-deep);
+    box-shadow: 0 6px 18px rgba(198, 152, 72, .35);
+}
+
+.arena-hero .arena-primary-btn:hover {
+    background: #b8893e;
+    color: var(--arena-navy-deep);
+}
+
+.arena-hero .arena-outline-btn {
+    background: rgba(255, 255, 255, .1);
+    border-color: rgba(255, 255, 255, .25);
+    color: #ffffff;
+}
+
+.arena-hero .arena-outline-btn:hover {
+    background: rgba(255, 255, 255, .18);
+    color: #ffffff;
+}
+
+@media (max-width: 600px) {
+    .arena-hero {
+        padding: 1.25rem;
+        gap: 1rem;
+    }
+
+    .arena-hero-title {
+        font-size: 1.5rem;
+    }
+
+    .arena-hero .arena-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}

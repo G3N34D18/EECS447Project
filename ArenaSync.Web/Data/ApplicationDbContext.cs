@@ -39,4 +39,8 @@ namespace ArenaSync.Web.Data
         {
             base.OnModelCreating(modelBuilder);
 
-   
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+
+        }
+    }
+}

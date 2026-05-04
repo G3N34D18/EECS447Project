@@ -641,4 +641,253 @@ namespace ArenaSync.Web.Migrations
 
             modelBuilder.Entity("ArenaSync.Web.Models.RegistersFor", b =>
                 {
-                    b.Ha
+                    b.HasOne("ArenaSync.Web.Models.Attendee", "Attendee")
+                        .WithMany("Registrations")
+                        .HasForeignKey("AttendeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArenaSync.Web.Models.Event", "Event")
+                        .WithMany("Registrations")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Attendee");
+
+                    b.Navigation("Event");
+                });
+
+            modelBuilder.Entity("ArenaSync.Web.Models.SuppliesAt", b =>
+                {
+                    b.HasOne("ArenaSync.Web.Models.Event", "Event")
+                        .WithMany("Suppliers")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArenaSync.Web.Models.Vendor", "Vendor")
+                        .WithMany("SuppliesAt")
+                        .HasForeignKey("VendorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+
+                    b.Navigation("Vendor");
+                });
+
+            modelBuilder.Entity("ArenaSync.Web.Models.TeamAssignment", b =>
+                {
+                    b.HasOne("ArenaSync.Web.Models.Event", "Event")
+                        .WithMany("Assignments")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArenaSync.Web.Models.LockerRoom", "LockerRoom")
+                        .WithMany("Assignments")
+                        .HasForeignKey("LockerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArenaSync.Web.Models.Team", "Team")
+                        .WithMany("Assignments")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+
+                    b.Navigation("LockerRoom");
+
+                    b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("ArenaSync.Web.Models.TeamEventRequest", b =>
+                {
+                    b.HasOne("ArenaSync.Web.Models.Event", "SourceEvent")
+                        .WithMany()
+                        .HasForeignKey("SourceEventId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ArenaSync.Web.Models.Event", "TargetEvent")
+                        .WithMany()
+                        .HasForeignKey("TargetEventId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ArenaSync.Web.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("SourceEvent");
+
+                    b.Navigation("TargetEvent");
+
+                    b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("ArenaSync.Web.Models.TeamReassignmentRequest", b =>
+                {
+                    b.HasOne("ArenaSync.Web.Models.Event", "RequestedEvent")
+                        .WithMany()
+                        .HasForeignKey("RequestedEventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ArenaSync.Web.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RequestedEvent");
+
+                    b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("ArenaSync.Web.Models.VendorAssignment", b =>
+                {
+                    b.HasOne("ArenaSync.Web.Models.VendorBooth", "Booth")
+                        .WithMany("VendorAssignments")
+                        .HasForeignKey("BoothId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArenaSync.Web.Models.Event", "Event")
+                        .WithMany("VendorAssignments")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArenaSync.Web.Models.Vendor", "Vendor")
+                        .WithMany("VendorAssignments")
+                        .HasForeignKey("VendorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Booth");
+
+                    b.Navigation("Event");
+
+                    b.Navigation("Vendor");
+                });
+
+            modelBuilder.Entity("ArenaSync.Web.Models.VendorBooth", b =>
+                {
+                    b.HasOne("ArenaSync.Web.Models.Venue", "Venue")
+                        .WithMany("VendorBooths")
+                        .HasForeignKey("VenueId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Venue");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArenaSync.Web.Models.Attendee", b =>
+                {
+                    b.Navigation("Registrations");
+                });
+
+            modelBuilder.Entity("ArenaSync.Web.Models.Event", b =>
+                {
+                    b.Navigation("Assignments");
+
+                    b.Navigation("Participants");
+
+                    b.Navigation("Registrations");
+
+                    b.Navigation("Suppliers");
+
+                    b.Navigation("VendorAssignments");
+                });
+
+            modelBuilder.Entity("ArenaSync.Web.Models.LockerRoom", b =>
+                {
+                    b.Navigation("Assignments");
+                });
+
+            modelBuilder.Entity("ArenaSync.Web.Models.Team", b =>
+                {
+                    b.Navigation("Assignments");
+
+                    b.Navigation("ParticipatesIn");
+                });
+
+            modelBuilder.Entity("ArenaSync.Web.Models.Vendor", b =>
+                {
+                    b.Navigation("SuppliesAt");
+
+                    b.Navigation("VendorAssignments");
+                });
+
+            modelBuilder.Entity("ArenaSync.Web.Models.VendorBooth", b =>
+                {
+                    b.Navigation("VendorAssignments");
+                });
+
+            modelBuilder.Entity("ArenaSync.Web.Models.Venue", b =>
+                {
+                    b.Navigation("Events");
+
+                    b.Navigation("LockerRooms");
+
+                    b.Navigation("VendorBooths");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}

@@ -231,4 +231,7 @@ public class ValidationServiceTests : IDisposable
         var svc = CreateService();
         var start = DateTime.Now.AddDays(10).Date.AddHours(14);
         var end   = start.AddHours(2);
-        var errors = await svc.ValidateEventDatesAsync(venu
+        var errors = await svc.ValidateEventDatesAsync(venueId: 1, startTime: start, endTime: end, excludeEventId: 2);
+        Assert.DoesNotContain(errors, e => e.Contains("already booked"));
+    }
+}

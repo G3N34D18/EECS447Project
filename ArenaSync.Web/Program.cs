@@ -13,7 +13,12 @@ builder.Services.AddRazorComponents()
 
 // ─── Database ─────────────────────────────────────────────────────────────────
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions => sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null)));
 
 // ─── ASP.NET Core Identity ────────────────────────────────────────────────────
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
@@ -87,7 +92,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 // ─── Seed database on startup (development only) ──────────────────────────────
-if (app.Environment.IsDevelopment())
+if (builder.Configuration.GetValue<bool>("SeedData:Enabled"))
 {
     using var scope = app.Services.CreateScope();
     var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();

@@ -4,3 +4,5 @@ obj/
 appsettings.Development.json
 /publish/
 /arenasync-publish.zip
+/.report_render
+/tools

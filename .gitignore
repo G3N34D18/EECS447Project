@@ -3,6 +3,8 @@ obj/
 .vs/
 appsettings.Development.json
 /publish/
+/publish-kudu/
+/ArenaSync.Web.kudu.zip
 /arenasync-publish.zip
 /.report_render
 /tools

@@ -3,59 +3,47 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArenaSync.Web.Services
 {
-    public sealed class DatabaseWarmupService : IHostedService
+    public static class DatabaseWarmupService
     {
-        private static readonly TimeSpan WarmupTimeout = TimeSpan.FromSeconds(90);
-
-        private readonly IServiceProvider _serviceProvider;
-        private readonly ILogger<DatabaseWarmupService> _logger;
-
-        public DatabaseWarmupService(
+        public static async Task WarmAsync(
             IServiceProvider serviceProvider,
-            ILogger<DatabaseWarmupService> logger)
+            ILogger logger,
+            TimeSpan timeout,
+            CancellationToken cancellationToken = default)
         {
-            _serviceProvider = serviceProvider;
-            _logger = logger;
-        }
-
-        public async Task StartAsync(CancellationToken cancellationToken)
-        {
-            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeout.CancelAfter(WarmupTimeout);
+            using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutSource.CancelAfter(timeout);
 
             try
             {
-                using var scope = _serviceProvider.CreateScope();
+                using var scope = serviceProvider.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 var strategy = context.Database.CreateExecutionStrategy();
 
                 await strategy.ExecuteAsync(async () =>
                 {
-                    if (!await context.Database.CanConnectAsync(timeout.Token))
+                    if (!await context.Database.CanConnectAsync(timeoutSource.Token))
                     {
-                        _logger.LogWarning("Database warmup could not establish a connection.");
-                        return;
+                        throw new InvalidOperationException("Database warmup could not establish a connection.");
                     }
 
                     await context.Events
                         .AsNoTracking()
                         .Select(e => e.Id)
                         .Take(1)
-                        .ToListAsync(timeout.Token);
+                        .ToListAsync(timeoutSource.Token);
                 });
 
-                _logger.LogInformation("Database warmup completed.");
+                logger.LogInformation("Database warmup completed before accepting requests.");
             }
-            catch (OperationCanceledException) when (timeout.IsCancellationRequested)
+            catch (OperationCanceledException) when (timeoutSource.IsCancellationRequested)
             {
-                _logger.LogWarning("Database warmup timed out after {Seconds} seconds.", WarmupTimeout.TotalSeconds);
+                logger.LogWarning("Database warmup timed out after {Seconds} seconds.", timeout.TotalSeconds);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Database warmup failed; the first user request may retry normally.");
+                logger.LogWarning(ex, "Database warmup failed; user requests may retry normally.");
             }
         }
-
-        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }

@@ -3,6 +3,7 @@ using ArenaSync.Web.Data;
 using ArenaSync.Web.Middleware;
 using ArenaSync.Web.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,9 +13,13 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 // ─── Database ─────────────────────────────────────────────────────────────────
+var defaultConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
+var sqlConnectionString = BuildSqlConnectionString(defaultConnectionString);
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlConnectionString,
         sqlOptions =>
         {
             sqlOptions.CommandTimeout(120);
@@ -23,6 +28,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 maxRetryDelay: TimeSpan.FromSeconds(30),
                 errorNumbersToAdd:
                 [
+                    -2, 64, 233, 10053, 10054, 10060,
                     4060, 40197, 40501, 40613,
                     10928, 10929, 49918, 49919, 49920
                 ]);
@@ -73,11 +79,6 @@ builder.Services.AddScoped<IParticipationService, ParticipationService>();
 builder.Services.AddScoped<IValidationService, ValidationService>();
 builder.Services.AddScoped<DbSeeder>();
 
-if (!builder.Environment.IsDevelopment())
-{
-    builder.Services.AddHostedService<DatabaseWarmupService>();
-}
-
 // ─── Build ────────────────────────────────────────────────────────────────────
 var app = builder.Build();
 
@@ -112,4 +113,21 @@ if (builder.Configuration.GetValue<bool>("SeedData:Enabled"))
     await seeder.SeedAsync();
 }
 
+if (!app.Environment.IsDevelopment())
+{
+    await DatabaseWarmupService.WarmAsync(app.Services, app.Logger, TimeSpan.FromMinutes(3));
+}
+
 app.Run();
+
+static string BuildSqlConnectionString(string connectionString)
+{
+    var sqlBuilder = new SqlConnectionStringBuilder(connectionString);
+
+    if (sqlBuilder.ConnectTimeout < 120)
+    {
+        sqlBuilder.ConnectTimeout = 120;
+    }
+
+    return sqlBuilder.ConnectionString;
+}

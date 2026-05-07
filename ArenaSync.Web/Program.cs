@@ -15,10 +15,18 @@ builder.Services.AddRazorComponents()
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions => sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(10),
-            errorNumbersToAdd: null)));
+        sqlOptions =>
+        {
+            sqlOptions.CommandTimeout(120);
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 10,
+                maxRetryDelay: TimeSpan.FromSeconds(30),
+                errorNumbersToAdd:
+                [
+                    4060, 40197, 40501, 40613,
+                    10928, 10929, 49918, 49919, 49920
+                ]);
+        }));
 
 // ─── ASP.NET Core Identity ────────────────────────────────────────────────────
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
@@ -64,6 +72,11 @@ builder.Services.AddScoped<IReportingService, ReportingService>();
 builder.Services.AddScoped<IParticipationService, ParticipationService>();
 builder.Services.AddScoped<IValidationService, ValidationService>();
 builder.Services.AddScoped<DbSeeder>();
+
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Services.AddHostedService<DatabaseWarmupService>();
+}
 
 // ─── Build ────────────────────────────────────────────────────────────────────
 var app = builder.Build();
